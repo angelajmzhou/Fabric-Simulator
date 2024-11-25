@@ -1,105 +1,79 @@
-'use strict'
+import Ammo from "ammo.js";
 
-class physicsWorld{
-
-/**
-     * Create a new physics engine (Ammo) instance
- */
-constructor() {
-    this.bodies = [];
-}
-
-createBody(){
-
-}
-
-/**
-     * loads a collision shape for static mannequin
-     * @param {THREE.Mesh} mesh instance of a loaded FBX model
- */
-createTriangleMeshCollisionShape(mesh) {
-    const triangleMesh = new Ammo.btTriangleMesh();
-
-    // Iterate through the mesh geometry
-    mesh.traverse((child) => {
-        if (child.isMesh) {
-            const geometry = child.geometry;
-            const positionAttribute = geometry.attributes.position;
-
-            // Add triangles to the btTriangleMesh
-            for (let i = 0; i < positionAttribute.count; i += 3) {
-                const vertex1 = new Ammo.btVector3(
-                    positionAttribute.getX(i),
-                    positionAttribute.getY(i),
-                    positionAttribute.getZ(i)
-                );
-                const vertex2 = new Ammo.btVector3(
-                    positionAttribute.getX(i + 1),
-                    positionAttribute.getY(i + 1),
-                    positionAttribute.getZ(i + 1)
-                );
-                const vertex3 = new Ammo.btVector3(
-                    positionAttribute.getX(i + 2),
-                    positionAttribute.getY(i + 2),
-                    positionAttribute.getZ(i + 2)
-                );
-
-                triangleMesh.addTriangle(vertex1, vertex2, vertex3, true);
-                Ammo.destroy(vertex1);
-                Ammo.destroy(vertex2);
-                Ammo.destroy(vertex3);
-            }
-        }
-    });
-
-    // Create a collision shape from the triangle mesh
-    const isStatic = true; // For static objects
-    const shape = new Ammo.btBvhTriangleMeshShape(triangleMesh, isStatic);
-
-    return shape;
-}
-
-setupPhysicsWorld(){
-
-    let collisionConfiguration  = new Ammo.btDefaultCollisionConfiguration(),
-        dispatcher              = new Ammo.btCollisionDispatcher(collisionConfiguration),
-        overlappingPairCache    = new Ammo.btDbvtBroadphase(),
-        solver                  = new Ammo.btSequentialImpulseConstraintSolver();
-
-    physicsWorld           = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-    physicsWorld.setGravity(new Ammo.btVector3(0, -10, 0));
-
-}
-
-createRigidBodyForTriangleMesh(mesh, collisionShape, mass = 0) {
-    const transform = new Ammo.btTransform();
-    transform.setIdentity();
-
-    const position = mesh.position;
-    transform.setOrigin(new Ammo.btVector3(position.x, position.y, position.z));
-
-    const rotation = mesh.quaternion;
-    transform.setRotation(new Ammo.btQuaternion(rotation.x, rotation.y, rotation.z, rotation.w));
-
-    const motionState = new Ammo.btDefaultMotionState(transform);
-    const localInertia = new Ammo.btVector3(0, 0, 0);
-
-    // No local inertia for static objects
-    if (mass > 0) {
-        collisionShape.calculateLocalInertia(mass, localInertia);
+class Physics {
+    constructor() {
+        this.initPromise = null; // Promise to ensure Ammo.js initializes once
+        this.physicsWorld = null;
+        this.collisionConfiguration = null;
+        this.dispatcher = null;
+        this.broadphase = null;
+        this.solver = null;
+        this.objects = []; // Track objects added to the physics world
     }
 
-    const rbInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, collisionShape, localInertia);
-    const rigidBody = new Ammo.btRigidBody(rbInfo);
+    /**
+     * Initialize Ammo.js and set up the physics world.
+     * @returns {Promise<void>}
+     */
+    async init() {
+        // asynchronously initializes Ammo.js; promise resolves when Ammo.js is ready
+        if (this.initPromise) return this.initPromise;
 
-    physicsWorld.addRigidBody(rigidBody);
-    return rigidBody;
+        //initialize initPromise if not yet ready
+        this.initPromise = Ammo().then((AmmoLib) => {
+            //use default collision configuration
+            this.collisionConfiguration = new AmmoLib.btDefaultCollisionConfiguration(); 
+            //manage collisions between objects w/ configuration
+            this.dispatcher = new AmmoLib.btCollisionDispatcher(this.collisionConfiguration);
+            //broadphase collision detection algorithm (simple, check all object pairs w/o optimizing)
+            this.broadphase = new AmmoLib.btSimpleBroadphase();
+            //constraint solver -- calculates effects of collisions and forces on objects (i.e. interpenetration)
+            this.solver = new AmmoLib.btSequentialImpulseConstraintSolver();
+            //create physics world: simulation core 
+            this.physicsWorld = new AmmoLib.btDiscreteDynamicsWorld(
+                //use previously initialized values
+                this.dispatcher,
+                this.broadphase,
+                this.solver,
+                this.collisionConfiguration
+            );
+            //set earth-like gravity vector 
+            this.physicsWorld.setGravity(new AmmoLib.btVector3(0, -9.81, 0)); // Default gravity
+        });
+
+        return this.initPromise;
+    }
+
+  
+
+    /**
+     * Run the physics simulation.
+     * @param {number} deltaTime Time step for the simulation.
+     */
+    simulate(deltaTime) {
+        if (!this.physicsWorld) {
+            console.warn("Physics world not initialized. Call `init()` first.");
+            return;
+        }
+
+        this.physicsWorld.stepSimulation(deltaTime, 10);
+
+        // Optionally: Update positions of objects in your rendering engine
+        this.objects.forEach((body) => {
+            const transform = new Ammo.btTransform();
+            body.getMotionState().getWorldTransform(transform);
+            const origin = transform.getOrigin();
+            const rotation = transform.getRotation();
+
+            // Example: Update a Three.js mesh
+            if (body.mesh) {
+                body.mesh.position.set(origin.x(), origin.y(), origin.z());
+                body.mesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
+            }
+
+            Ammo.destroy(transform);
+        });
+    }
 }
 
-// Example usage:
-let collisionShape = createTriangleMeshCollisionShape(fbx);
-let rigidBody = createRigidBodyForTriangleMesh(fbx, collisionShape);
-
-Ammo.destroy(collisionShape);
-Ammo.destroy(triangleMesh);
-}
+export default Physics;
