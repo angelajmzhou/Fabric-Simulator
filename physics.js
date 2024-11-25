@@ -1,4 +1,23 @@
-function createTriangleMeshCollisionShape(mesh) {
+'use strict'
+
+class physicsWorld{
+
+/**
+     * Create a new physics engine (Ammo) instance
+ */
+constructor() {
+    this.bodies = [];
+}
+
+createBody(){
+
+}
+
+/**
+     * loads a collision shape for static mannequin
+     * @param {THREE.Mesh} mesh instance of a loaded FBX model
+ */
+createTriangleMeshCollisionShape(mesh) {
     const triangleMesh = new Ammo.btTriangleMesh();
 
     // Iterate through the mesh geometry
@@ -40,7 +59,7 @@ function createTriangleMeshCollisionShape(mesh) {
     return shape;
 }
 
-function setupPhysicsWorld(){
+setupPhysicsWorld(){
 
     let collisionConfiguration  = new Ammo.btDefaultCollisionConfiguration(),
         dispatcher              = new Ammo.btCollisionDispatcher(collisionConfiguration),
@@ -52,7 +71,7 @@ function setupPhysicsWorld(){
 
 }
 
-function createRigidBodyForTriangleMesh(mesh, collisionShape, mass = 0) {
+createRigidBodyForTriangleMesh(mesh, collisionShape, mass = 0) {
     const transform = new Ammo.btTransform();
     transform.setIdentity();
 
@@ -78,8 +97,9 @@ function createRigidBodyForTriangleMesh(mesh, collisionShape, mass = 0) {
 }
 
 // Example usage:
-const collisionShape = createTriangleMeshCollisionShape(fbx);
-const rigidBody = createRigidBodyForTriangleMesh(fbx, collisionShape);
+let collisionShape = createTriangleMeshCollisionShape(fbx);
+let rigidBody = createRigidBodyForTriangleMesh(fbx, collisionShape);
 
 Ammo.destroy(collisionShape);
 Ammo.destroy(triangleMesh);
+}
