@@ -1,4 +1,4 @@
-import Ammo from "ammo.js";
+import Ammo from "./js/ammo";
 
 /* Sources:
  * https://medium.com/@bluemagnificent/intro-to-javascript-3d-physics-using-ammo-js-and-three-js-dd48df81f591
@@ -44,6 +44,8 @@ class Physics {
             //constraint solver -- calculates effects of collisions and forces on objects (i.e. interpenetration)
             this.solver = new Ammo.btSequentialImpulseConstraintSolver();
 
+            this.softBodyHelper = new Ammo.btSoftBodyHelpers();
+
             this.softBodySolver = new Ammo.btDefaultSoftBodySolver();
             //create physics world: simulation core 
             this.physicsWorld = new Ammo.btSoftRigidDynamicsWorld(
@@ -63,7 +65,23 @@ class Physics {
         return this.initPromise;
     }
 
-  
+
+    
+    generateSoftBody(worldInfo, ){
+        
+        worldInfo,          // 1. btSoftBodyWorldInfo object
+        corner00,           // 2. btVector3 (bottom-left corner)
+        corner10,           // 3. btVector3 (bottom-right corner)
+        corner01,           // 4. btVector3 (top-left corner)
+        corner11,           // 5. btVector3 (top-right corner)
+        resx,               // 6. Integer (number of segments along X-axis)
+        resy,               // 7. Integer (number of segments along Y-axis)
+        fixedCorners,       // 8. Integer (bitmask to define fixed corners)
+        gendiags            // 9. Boolean (whether to generate diagonal links)
+
+        return this.softBodyHelper.CreatePatch( physicsWorld.getWorld + 1, clothNumSegmentsY + 1, 0, true );
+    }
+ 
 
    /**
  * Run the physics simulation.
