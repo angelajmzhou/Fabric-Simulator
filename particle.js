@@ -1,4 +1,3 @@
-
 // Particle System
 const fabricWidth = 10;
 const fabricHeight = 10;

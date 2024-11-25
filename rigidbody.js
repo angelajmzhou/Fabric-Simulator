@@ -1,5 +1,12 @@
 class rigidBody extends Physics{
-        /**
+    /** 
+     * @param {Physics} physicsWorld instance of the Physics class to manage collisions
+     *
+     **/
+    constructor(physicsWorld){
+        this.physicsWorld = physicsWorld;
+    }
+    /**
      * Add a rigid body to the physics world.
      * @param {Ammo.btRigidBody} rigidBody
      */
