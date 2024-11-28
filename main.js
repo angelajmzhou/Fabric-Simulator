@@ -1,10 +1,10 @@
-import defaultExport, * as THREE from 'three';
+import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { Physics } from './physics';
+import Physics from './physics.js';
 
 // Scene Setup
-const physicsWorld = new Physics();
+//const physicsWorld = new Physics();
 // Get the canvas element
 const canvas = document.getElementById('canvas');
 
@@ -15,7 +15,7 @@ camera.position.set(0, 2, 5);
 
 const renderer = new THREE.WebGLRenderer({ canvas });
 renderer.setSize(window.innerWidth, window.innerHeight);
-
+renderer.setClearColor(0xA3A3A3);
 
 // Lighting
 const light = new THREE.DirectionalLight(0xffffff, 1);

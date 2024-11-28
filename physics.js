@@ -1,11 +1,10 @@
-import Ammo from "./js/ammo";
-
 /* Sources:
  * https://medium.com/@bluemagnificent/intro-to-javascript-3d-physics-using-ammo-js-and-three-js-dd48df81f591
  * 
  */
 class Physics {
     constructor() {
+        console.log('Physics initialized')
         this.initPromise = null; // Promise to ensure Ammo.js initializes once
         this.physicsWorld = null;
         this.collisionConfiguration = null;
@@ -128,5 +127,4 @@ class Physics {
         });
     }
 }
-
-export default Physics;
+export default Physics
