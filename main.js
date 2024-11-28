@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
 
 // Scene Setup
-//const physicsWorld = new Physics();
+const physicsWorld = new Physics();
 // Get the canvas element
 const canvas = document.getElementById('canvas');
 

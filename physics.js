@@ -6,6 +6,7 @@ class Physics {
     constructor() {
         console.log('Physics initialized')
         this.initPromise = null; // Promise to ensure Ammo.js initializes once
+        this.init();
         this.physicsWorld = null;
         this.collisionConfiguration = null;
         this.dispatcher = null;
@@ -15,10 +16,12 @@ class Physics {
         this.objects = []; // Track objects added to the physics world
 		this.rigidBodies = [];
 		this.margin = 0.05;
-		this.cloth;
-		this.transformAux1 = new Ammo.btTransform();
-        this.time = 0;
-    }
+		this.cloth = null;
+        this.softBodyHelper = null;
+		this.transformAux1 = null;
+        //elapsed time
+        this.time = performance.now();
+     }
 
     /**
      * Initialize Ammo.js and set up the physics world.
@@ -46,6 +49,8 @@ class Physics {
             this.softBodyHelper = new Ammo.btSoftBodyHelpers();
 
             this.softBodySolver = new Ammo.btDefaultSoftBodySolver();
+            
+            this.transformAux1 = newAmmo.btTransform();
             //create physics world: simulation core 
             this.physicsWorld = new Ammo.btSoftRigidDynamicsWorld(
                 //use previously initialized values
@@ -60,14 +65,12 @@ class Physics {
             //set earth-like gravity for soft body solver
             this.physicsWorld.getWorldInfo().set_m_gravity( new Ammo.btVector3( 0, -9.81, 0 ) );
         });
-
-        return this.initPromise;
     }
 
 
     
-    generateSoftBody(worldInfo, ){
-        
+    generateSoftBody(worldInfo, corner00, corner10, corner01, corner11, resx, resy, fixedCorners, gendiags){
+    return this.softBodyHelper.CreatePatch(
         worldInfo,          // 1. btSoftBodyWorldInfo object
         corner00,           // 2. btVector3 (bottom-left corner)
         corner10,           // 3. btVector3 (bottom-right corner)
@@ -77,8 +80,8 @@ class Physics {
         resy,               // 7. Integer (number of segments along Y-axis)
         fixedCorners,       // 8. Integer (bitmask to define fixed corners)
         gendiags            // 9. Boolean (whether to generate diagonal links)
+    );
 
-        return this.softBodyHelper.CreatePatch( physicsWorld.getWorld + 1, clothNumSegmentsY + 1, 0, true );
     }
  
 
