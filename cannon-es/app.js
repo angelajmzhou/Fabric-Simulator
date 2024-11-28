@@ -4,10 +4,14 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as CANNON from 'cannon-es';
 
 // Renderer, Scene, and Camera Setup
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const canvas = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+  canvas: canvas, // Attach renderer to this canvas
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0xA3A3A3);
-document.body.appendChild(renderer.domElement);
+// document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 
