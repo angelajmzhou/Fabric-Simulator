@@ -1,12 +1,12 @@
-/* Sources:
- * https://medium.com/@bluemagnificent/intro-to-javascript-3d-physics-using-ammo-js-and-three-js-dd48df81f591
- * 
- */
+/**
+* Sources:
+* https://medium.com/@bluemagnificent/intro-to-javascript-3d-physics-using-ammo-js-and-three-js-dd48df81f591
+* 
+**/
 class Physics {
     constructor() {
-        console.log('Physics initialized')
+        console.log('Physics constructed')
         this.initPromise = null; // Promise to ensure Ammo.js initializes once
-        this.init();
         this.physicsWorld = null;
         this.collisionConfiguration = null;
         this.dispatcher = null;
@@ -26,17 +26,20 @@ class Physics {
     /**
      * Initialize Ammo.js and set up the physics world.
      * @returns {Promise<void>}
-     */
+     **/
 
- 
 
     async init() {
         // asynchronously initializes Ammo.js; promise resolves when Ammo.js is ready
         if (this.initPromise) return this.initPromise;
-
+        if (typeof Ammo === 'undefined') {
+            console.error('Ammo.js is not loaded or available.');
+            return Promise.reject('Ammo.js not loaded');
+        }
         //initialize Ammo.js library, returning a promise
         //once loaded, then handle result Ammo, the Ammo.js library object
         this.initPromise = Ammo().then((Ammo) => {
+            console.log("ammo initialized")
             //use default collision configuration
             this.collisionConfiguration = new Ammo.btSoftBodyRigidBodyCollisionConfiguration(); 
             //manage collisions between objects w/ configuration
@@ -45,11 +48,8 @@ class Physics {
             this.broadphase = new Ammo.btDbvtBroadphase();
             //constraint solver -- calculates effects of collisions and forces on objects (i.e. interpenetration)
             this.solver = new Ammo.btSequentialImpulseConstraintSolver();
-
             this.softBodyHelper = new Ammo.btSoftBodyHelpers();
-
             this.softBodySolver = new Ammo.btDefaultSoftBodySolver();
-            
             this.transformAux1 = newAmmo.btTransform();
             //create physics world: simulation core 
             this.physicsWorld = new Ammo.btSoftRigidDynamicsWorld(

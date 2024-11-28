@@ -5,6 +5,8 @@ import Physics from './physics.js';
 
 // Scene Setup
 const physicsWorld = new Physics();
+await physicsWorld.init();
+console.log("Physics world ready.")
 // Get the canvas element
 const canvas = document.getElementById('canvas');
 
