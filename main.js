@@ -47,6 +47,7 @@ import { setupUIHandlers } from'./UI.js'
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 	  mannequin = fbx;
 	  mannequin.scale.set(0.001, 0.001, 0.001);
+	  physicsWorld.addRigid(mannequin);
 	  scene.add(mannequin);
 	});
 	
@@ -56,14 +57,10 @@ import { setupUIHandlers } from'./UI.js'
 	// Animation Loop
 	let prevTime = performance.now();
 	function animate() {
-
-	  requestAnimationFrame(animate);
-	  //const currentTime = performance.now();
-	  //const deltaTime = (currentTime - prevTime) / 1000;
-	  //prevTime = currentTime;
-	
-	  //if (mannequin) simulate(deltaTime);
-	  renderer.render(scene, camera);
+		requestAnimationFrame(animate);
+		const deltaTime = clock.getDelta();
+		physicsWorld.simulate(deltaTime);
+		renderer.render(scene, camera);
 	}
 	animate();
 
