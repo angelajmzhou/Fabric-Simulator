@@ -3,25 +3,30 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
 import softBody from './softbody.js';
-import { setupUIHandlers } from'./UI.js'
+import { setupUIHandlers, initializeRaycaster } from'./UI.js'
 
+// Get the canvas element
+const canvas = document.getElementById('canvas');
 	// Get the canvas element
 const canvas = document.getElementById('canvas');
 	
-	// Scene Setup
+const clock = new THREE.Clock();
+// Scene Setup
 const scene = new THREE.Scene();
 
 const clock = new THREE.Clock();
 Ammo().then(function(Ammo) {
-  const physics = new Physics(Ammo);
-  console.log('Physics world initialized');
+  	const physics = new Physics(Ammo);
+	console.log('Physics world initialized');
 
-  // Now create the soft body
-  const cloth = new softBody(Ammo, physics);
+  	// Now create the soft body
+  	const cloth = new softBody(Ammo, physics);
 
-  // Access the cloth mesh and add it to the scene
-  scene.add(cloth.get());
+  	// Access the cloth mesh and add it to the scene
+  	scene.add(cloth.get());
 
+	// Raycaster stuff
+	const raycaster = new THREE.Raycaster();
 	const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 	camera.position.set(0, 2, 5);
 	
@@ -46,12 +51,18 @@ Ammo().then(function(Ammo) {
 	
 	// Camera Controls
 	const controls = new OrbitControls(camera, renderer.domElement);
+
+	// Initialize raycaster in UI
+	initializeRaycaster(raycaster, scene, camera);
+	
+	// UI function
 	setupUIHandlers();
+
 	// Animation Loop
 	function animate() {
 		requestAnimationFrame(animate);
 		const deltaTime = clock.getDelta();
-		//physics.simulate(deltaTime);
+		physics.simulate(deltaTime);
 		renderer.render(scene, camera);
 	}
 	animate();
