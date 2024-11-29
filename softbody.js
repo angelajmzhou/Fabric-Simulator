@@ -1,74 +1,104 @@
-class softBody extends Physics{
+import * as THREE from 'three';
+import Physics from './physics';
+
+class softBody {
     /** 
-     * @param {Physics} physicsWorld instance of the Physics class to manage collisions
-     * @param {Int} clothWidth width of cloth
-     * @param {Int} clothHeight height of cloth
-     * @param {Vector3} position cloth position in world space
-     *
-     **/
-    constructor(physicsWorld, clothWidth = 4, clothHeight = 3, clothPos = newThree.Vector3(-3,3,2)){
-        super();
-        this.physicsWorld = physicsWorld;
-        this.Ammo = physicsWorld.Ammo;
+     * @param {Object} Ammo Ammo.js library instance
+     * @param {Object} physics Physics world instance to manage the simulation
+     * @param {number} clothWidth Width of the cloth
+     * @param {number} clothHeight Height of the cloth
+     * @param {THREE.Vector3} clothPos Position of the cloth in world space
+     * @param {number} margin Collision margin for the soft body
+     */
+    constructor(Ammo, physics, clothWidth = 4, clothHeight = 3, clothPos = new THREE.Vector3(0, 0, 2), margin = 0.05) {
+        // Store Ammo and physicsWorld
+        this.Ammo = Ammo;
+        this.physics = physics;
+        this.margin = margin;
+
+        // Cloth geometry setup
         this.clothWidth = clothWidth;
         this.clothHeight = clothHeight;
-        this.clothPos = clothPos;
-        this.softBodyHelpers = new this.Ammo.btSoftBodyHelpers();
-
         this.clothNumSegmentsZ = clothWidth * 5;
         this.clothNumSegmentsY = clothHeight * 5;
-        this.clothSegmentLengthZ = clothWidth / clothNumSegmentsZ;
-        this.clothSegmentLengthY = clothHeight / clothNumSegmentsY;
-        
-		this.clothCorner00 = new this.Ammo.btVector3( clothPos.x, clothPos.y + clothHeight, clothPos.z );
-		this.clothCorner01 = new this.Ammo.btVector3( clothPos.x, clothPos.y + clothHeight, clothPos.z - clothWidth );
-		this.clothCorner10 = new this.Ammo.btVector3( clothPos.x, clothPos.y, clothPos.z );
-		this.clothCorner11 = new this.Ammo.btVector3( clothPos.x, clothPos.y, clothPos.z - clothWidth );
+        this.clothSegmentLengthZ = clothWidth / this.clothNumSegmentsZ;
+        this.clothSegmentLengthY = clothHeight / this.clothNumSegmentsY;
+        this.clothPos = clothPos;
 
-        var clothGeometry = new THREE.PlaneBufferGeometry( clothWidth, clothHeight, clothNumSegmentsZ, clothNumSegmentsY );
-        clothGeometry.rotateY( Math.PI * 0.5 )
-        clothGeometry.translate( clothPos.x, clothPos.y + clothHeight * 0.5, clothPos.z - clothWidth * 0.5 );
+        // Three.js cloth mesh setup
+        this.clothGeometry = new THREE.PlaneGeometry(this.clothWidth, this.clothHeight, this.clothNumSegmentsZ, this.clothNumSegmentsY);
+        this.clothGeometry.rotateY(Math.PI * 0.5);
+        this.clothGeometry.translate(clothPos.x, clothPos.y + clothHeight * 0.5, clothPos.z - clothWidth * 0.5);
 
-        var clothMaterial = new THREE.MeshLambertMaterial( { color: 0xFFFFFF, side: THREE.DoubleSide } );
-        this.mesh = new THREE.Mesh( clothGeometry, clothMaterial );
-        cloth.castShadow = true;
-        cloth.receiveShadow = true;
+        this.clothMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide });
+        this.cloth = new THREE.Mesh(this.clothGeometry, this.clothMaterial);
+        this.cloth.castShadow = true;
+        this.cloth.receiveShadow = true;
 
-        this.cloth = physicsWorld.createClothPatch(worldInfo, this.clothCorner00, this.clothCorner01, this.clothCorner10, this.clothCorner11, this.clothNumSegmentsZ, this.clothNumSegmentsY, 1, physicsWorld );
+        // Set up the cloth texture
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load("../textures/grid.png", (texture) => {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(this.clothNumSegmentsZ, this.clothNumSegmentsY);
+            this.cloth.material.map = texture;
+            this.cloth.material.needsUpdate = true;
+        });
 
+        // Ammo.js soft body setup
+        this.softBodyHelpers = new this.Ammo.btSoftBodyHelpers();
+        this.clothCorner00 = new this.Ammo.btVector3(clothPos.x, clothPos.y + clothHeight, clothPos.z);
+        this.clothCorner01 = new this.Ammo.btVector3(clothPos.x, clothPos.y + clothHeight, clothPos.z - clothWidth);
+        this.clothCorner10 = new this.Ammo.btVector3(clothPos.x, clothPos.y, clothPos.z);
+        this.clothCorner11 = new this.Ammo.btVector3(clothPos.x, clothPos.y, clothPos.z - clothWidth);
+
+        // Create the soft body from the helper
+        this.clothSoftBody = physics.generateSoftBody(
+            physics.physicsWorld.getWorldInfo(),
+            this.clothCorner00,
+            this.clothCorner10,
+            this.clothCorner01,
+            this.clothCorner11,
+            this.clothNumSegmentsZ + 1,
+            this.clothNumSegmentsY + 1,
+            0, // Set fixed corners if any
+            true // Generate diagonal links
+        );
+
+        this.clothSoftBody.appendAnchor(0, physics.groundBody, true);
+        this.clothSoftBody.appendAnchor(this.clothNumSegmentsZ, physics.groundBody, true);
+
+        // Configuration for the soft body
+        let sbConfig = this.clothSoftBody.get_m_cfg();
+        sbConfig.set_viterations(10);  // Set the number of velocity iterations
+        sbConfig.set_piterations(10);  // Set the number of pressure iterations
+
+        // Set the mass for the cloth (not fully fixed)
+        this.clothSoftBody.setTotalMass(0.9, false);
+
+        // Collision margin
+        this.Ammo.castObject(this.clothSoftBody, this.Ammo.btCollisionObject)
+            .getCollisionShape()
+            .setMargin(this.margin * 3);
+
+        // Add soft body to the physics world
+        this.physics.physicsWorld.addSoftBody(this.clothSoftBody, 1, -1);
+
+        // Disable deactivation (keep the cloth active even if it is not moving)
+        this.clothSoftBody.setActivationState(4);
+
+        // Link the soft body physics to the mesh
+        this.cloth.userData.physicsBody = this.clothSoftBody;
     }
 
-    createClothPatch(worldInfo, corner00, corner01, corner10, corner11, resX, resY, mass, physicsWorld) {
-        const softBody = softBodyHelpers.CreatePatch(worldInfo, corner00, corner01, corner10, corner11, resX, resY, 0, true);
-        const sbConfig = softBody.get_m_cfg();
-        sbConfig.set_viterations(10);
-        sbConfig.set_piterations(10);
-        softBody.setTotalMass(mass, false);
-        Ammo.castObject(softBody, Ammo.btCollisionObject).getCollisionShape().setMargin(margin * 3);
-        physicsWorld.addSoftBody(softBody, 1, -1);
-        softBody.setActivationState(4);
-        return softBody;
-    }
-
-
-    get(){
+    /** 
+     * Getter for the cloth mesh
+     * @returns {THREE.Mesh} The Three.js mesh for the cloth
+     */
+    get() {
         return this.cloth;
     }
-    /*
-    setTexture(filepath){
-        textureLoader.load( "../textures/grid.png", function( texture ) {
-					texture.wrapS = THREE.RepeatWrapping;
-					texture.wrapT = THREE.RepeatWrapping;
-					texture.repeat.set( clothNumSegmentsZ, clothNumSegmentsY );
-					cloth.material.map = texture;
-					cloth.material.needsUpdate = true;
-				} );
-    }
-    */
-	
-
-
-			
-
-        
 }
+
+// Export softBody as the default export
+export default softBody;

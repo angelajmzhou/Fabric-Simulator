@@ -2,17 +2,33 @@ import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
+import softBody from './softbody.js';
 import { setupUIHandlers } from'./UI.js'
 
-// Scene Setup
-Ammo().then(function(Ammo) {
-	const physicsWorld = new Physics(Ammo);
-	console.log("Physics world ready.")
 	// Get the canvas element
 	const canvas = document.getElementById('canvas');
 	
 	// Scene Setup
 	const scene = new THREE.Scene();
+
+  Ammo().then(function(Ammo) {
+    const physics = new Physics(Ammo);
+    physics.init(Ammo).then(() => {
+      console.log('Physics world initialized');
+  
+      // Now create the soft body
+      const cloth = new softBody(Ammo, physics);
+  
+      // Access the cloth mesh and add it to the scene
+      scene.add(cloth.get());
+  
+      // Start your animation loop or simulation here
+      animate();
+  }).catch((err) => {
+      console.error("Error initializing Physics world:", err);
+  });
+
+
 	const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 	camera.position.set(0, 2, 5);
 	

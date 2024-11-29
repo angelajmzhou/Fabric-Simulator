@@ -61,6 +61,9 @@ class Physics {
                 this.softBodySolver
             );
 
+            // Create the world info for the soft bodies
+            this.worldInfo = new this.Ammo.btSoftBodyWorldInfo();
+
             // Set earth-like gravity vector for entire rigid bodies physics world
             this.physicsWorld.setGravity(new this.Ammo.btVector3(0, -9.81, 0));
 
@@ -85,9 +88,7 @@ class Physics {
         fixedCorners,       // 8. Integer (bitmask to define fixed corners)
         gendiags            // 9. Boolean (whether to generate diagonal links)
     );
-
     }
- 
 
    /**
  * Run the physics simulation.
