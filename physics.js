@@ -28,17 +28,17 @@ class Physics {
         // Create transform auxiliary object
         this.transformAux1 = new this.Ammo.btTransform();
 
-            // Create physics world: simulation core 
-            this.physicsWorld = new this.Ammo.btSoftRigidDynamicsWorld(
-                this.dispatcher,
-                this.broadphase,
-                this.solver,
-                this.collisionConfiguration,
-                this.softBodySolver
-            );
+        // Create physics world: simulation core 
+        this.physicsWorld = new this.Ammo.btSoftRigidDynamicsWorld(
+            this.dispatcher,
+            this.broadphase,
+            this.solver,
+            this.collisionConfiguration,
+            this.softBodySolver
+        );
 
-            // Create the world info for the soft bodies
-            this.worldInfo = new this.Ammo.btSoftBodyWorldInfo();
+        // Create the world info for the soft bodies
+        this.worldInfo = new this.Ammo.btSoftBodyWorldInfo();
 
         // Set earth-like gravity vector for entire rigid bodies physics world
         this.physicsWorld.setGravity(new this.Ammo.btVector3(0, -9.81, 0));
@@ -47,8 +47,6 @@ class Physics {
         this.physicsWorld.getWorldInfo().set_m_gravity(new this.Ammo.btVector3(0, -9.81, 0));
     }
     
-
-
 
     createRigidBodyForTriangleMesh(fbx, collisionShape, mass = 0) {
 
@@ -95,10 +93,10 @@ class Physics {
 * @param {THREE.Group} fbx_model instance of a loaded FBX model
 */
 addRigid(fbx_model) {
-    const meshShape = this.physicsWorld.createTriangleMeshCollisionShape(mesh);
+    const meshShape = this.createTriangleMeshCollisionShape(fbx_model);
     const transform = this.getTransform(fbx_model);
-    const motionState = new this.Ammo.vtDefaultMotionState(transform);
-    const rbInfo = newAmmo.btRigidBodyConstructionInfo(
+    const motionState = new this.Ammo.btDefaultMotionState(transform);
+    const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
         0, //mass
         motionState,
         meshShape,

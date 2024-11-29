@@ -11,23 +11,15 @@ import { setupUIHandlers } from'./UI.js'
 	// Scene Setup
 	const scene = new THREE.Scene();
 
-  Ammo().then(function(Ammo) {
-    const physics = new Physics(Ammo);
-    physics.init(Ammo).then(() => {
-      console.log('Physics world initialized');
-  
-      // Now create the soft body
-      const cloth = new softBody(Ammo, physics);
-  
-      // Access the cloth mesh and add it to the scene
-      scene.add(cloth.get());
-  
-      // Start your animation loop or simulation here
-      animate();
-  }).catch((err) => {
-      console.error("Error initializing Physics world:", err);
-  });
+Ammo().then(function(Ammo) {
+  const physics = new Physics(Ammo);
+  console.log('Physics world initialized');
 
+  // Now create the soft body
+  const cloth = new softBody(Ammo, physics);
+
+  // Access the cloth mesh and add it to the scene
+  scene.add(cloth.get());
 
 	const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 	camera.position.set(0, 2, 5);
@@ -47,7 +39,7 @@ import { setupUIHandlers } from'./UI.js'
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 	  mannequin = fbx;
 	  mannequin.scale.set(0.001, 0.001, 0.001);
-	  physicsWorld.addRigid(mannequin);
+	  physics.addRigid(mannequin);
 	  scene.add(mannequin);
 	});
 	
@@ -58,8 +50,8 @@ import { setupUIHandlers } from'./UI.js'
 	let prevTime = performance.now();
 	function animate() {
 		requestAnimationFrame(animate);
-		const deltaTime = clock.getDelta();
-		physicsWorld.simulate(deltaTime);
+		//const deltaTime = clock.getDelta();
+		//physicsWorld.simulate(deltaTime);
 		renderer.render(scene, camera);
 	}
 	animate();
