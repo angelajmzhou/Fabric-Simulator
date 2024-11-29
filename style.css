@@ -67,16 +67,24 @@ a {
     margin-top: 1em;
     flex-direction: row;
 }
-
 .setting-item {
-    color: lightgray;
+    color: red; /* Default color */
     margin: 0 0.75em;
+    cursor: pointer;
+    padding: 0.5em 1em;
+    border: 2px solid red;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.setting-item:hover {
+    background-color: #ffcccc; /* Light red on hover */
 }
 
 .setting-item.active {
-    color: #CA3C25;
+    background-color: #CA3C25; /* Interaction color */
+    color: white; /* Contrast color during interaction */
 }
-
 
 #canvas {
     aspect-ratio: 16 / 9;

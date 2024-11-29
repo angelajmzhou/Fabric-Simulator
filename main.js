@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
+import { setupUIHandlers } from'./UI.js'
 
 // Scene Setup
 const physicsWorld = new Physics();
@@ -35,6 +36,9 @@ loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 
 // Camera Controls
 const controls = new OrbitControls(camera, renderer.domElement);
+
+// Initialize UI Handlers
+setupUIHandlers();
 
 // Animation Loop
 let prevTime = performance.now();
