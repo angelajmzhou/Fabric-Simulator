@@ -180,11 +180,6 @@ createTriangleMeshCollisionShape(mesh) {
  * @param {number} deltaTime Time step for the simulation.
  */
     simulate(deltaTime) {
-        // Check if the physics world has been initialized
-        if (!this.physicsWorld) {
-            console.log("Physics world not initialized. Call `init()` first.");
-            return; // Exit early if the physics world is not ready
-        }
 
         // Step the physics simulation forward
         // `deltaTime`: The time elapsed since the last simulation step
@@ -196,7 +191,7 @@ createTriangleMeshCollisionShape(mesh) {
         this.objects.forEach((body) => {
             // Create a transform object to hold the rigid body's current state
             const transform = new this.Ammo.btTransform();
-
+            
             // Get the current position and rotation of the rigid body from Ammo.js
             body.getMotionState().getWorldTransform(transform);
 

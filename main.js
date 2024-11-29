@@ -6,11 +6,12 @@ import softBody from './softbody.js';
 import { setupUIHandlers } from'./UI.js'
 
 	// Get the canvas element
-	const canvas = document.getElementById('canvas');
+const canvas = document.getElementById('canvas');
 	
 	// Scene Setup
-	const scene = new THREE.Scene();
+const scene = new THREE.Scene();
 
+const clock = new THREE.Clock();
 Ammo().then(function(Ammo) {
   const physics = new Physics(Ammo);
   console.log('Physics world initialized');
@@ -47,11 +48,10 @@ Ammo().then(function(Ammo) {
 	const controls = new OrbitControls(camera, renderer.domElement);
 	setupUIHandlers();
 	// Animation Loop
-	let prevTime = performance.now();
 	function animate() {
 		requestAnimationFrame(animate);
-		//const deltaTime = clock.getDelta();
-		//physicsWorld.simulate(deltaTime);
+		const deltaTime = clock.getDelta();
+		//physics.simulate(deltaTime);
 		renderer.render(scene, camera);
 	}
 	animate();
