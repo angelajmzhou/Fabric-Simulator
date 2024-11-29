@@ -7,10 +7,7 @@ import { setupUIHandlers, initializeRaycaster } from'./UI.js'
 
 // Get the canvas element
 const canvas = document.getElementById('canvas');
-	// Get the canvas element
-const canvas = document.getElementById('canvas');
 	
-const clock = new THREE.Clock();
 // Scene Setup
 const scene = new THREE.Scene();
 
@@ -63,6 +60,7 @@ Ammo().then(function(Ammo) {
 		requestAnimationFrame(animate);
 		const deltaTime = clock.getDelta();
 		physics.simulate(deltaTime);
+		cloth.update();
 		renderer.render(scene, camera);
 	}
 	animate();

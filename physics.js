@@ -8,7 +8,6 @@ class Physics {
     constructor(Ammo) {
         this.Ammo = Ammo;
         this.objects = []; // Track objects added to the physics world
-		this.rigidBodies = [];
 		this.margin = 0.05;
         this.time = performance.now();
 

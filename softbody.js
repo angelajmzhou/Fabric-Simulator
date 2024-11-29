@@ -65,13 +65,18 @@ class softBody {
             true // Generate diagonal links
         );
 
-        this.clothSoftBody.appendAnchor(0, physics.groundBody, true);
-        this.clothSoftBody.appendAnchor(this.clothNumSegmentsZ, physics.groundBody, true);
+        //this.clothSoftBody.appendAnchor(0, physics.groundBody, true);
+        //this.clothSoftBody.appendAnchor(this.clothNumSegmentsZ, physics.groundBody, true);
 
         // Configuration for the soft body
         let sbConfig = this.clothSoftBody.get_m_cfg();
         sbConfig.set_viterations(10);  // Set the number of velocity iterations
         sbConfig.set_piterations(10);  // Set the number of pressure iterations
+        sbConfig.set_kDF(0.5); //dynamic friction
+        sbConfig.set_kDP(0.005); //damping
+        sbConfig.set_kPR(1); //pressure resistance
+        sbConfig.set_kVCF(0.5); //volume conservation factor
+        sbConfig.set_kMT(0.1); //pose matching coefficient
 
         // Set the mass for the cloth (not fully fixed)
         this.clothSoftBody.setTotalMass(0.9, false);
@@ -98,7 +103,24 @@ class softBody {
     get() {
         return this.cloth;
     }
+    update() {
+        this.clothSoftBody.get_m_nodes(); //Ammo.btAligned Object Array
+        const geometry = this.cloth.geometry;
+        const softBodyNodes = this.clothSoftBody.get_m_nodes();
+    
+        // Update each vertex position
+        const position = geometry.attributes.position;
+        for (let i = 0; i < position.count; i++) {
+            const node = softBodyNodes.at(i); //get the ith node of Ammot.btAlignedObjectArray
+            const nodePosition = node.get_m_x(); //get position of node as Ammo.btVector3
+            position.setXYZ(i, nodePosition.x(), nodePosition.y(), nodePosition.z());
+        }
+    
+        // Notify Three.js to update the geometry
+        position.needsUpdate = true;
+    }
 }
+
 
 // Export softBody as the default export
 export default softBody;
