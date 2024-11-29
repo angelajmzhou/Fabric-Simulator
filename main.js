@@ -36,10 +36,11 @@ Ammo().then(function(Ammo) {
 	
 	// Camera Controls
 	const controls = new OrbitControls(camera, renderer.domElement);
-	
+	setupUIHandlers();
 	// Animation Loop
 	let prevTime = performance.now();
 	function animate() {
+
 	  requestAnimationFrame(animate);
 	  //const currentTime = performance.now();
 	  //const deltaTime = (currentTime - prevTime) / 1000;
