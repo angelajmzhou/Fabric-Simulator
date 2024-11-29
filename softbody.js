@@ -7,21 +7,23 @@ class softBody extends Physics{
      *
      **/
     constructor(physicsWorld, clothWidth = 4, clothHeight = 3, clothPos = newThree.Vector3(-3,3,2)){
+        super();
         this.physicsWorld = physicsWorld;
+        this.Ammo = physicsWorld.Ammo;
         this.clothWidth = clothWidth;
         this.clothHeight = clothHeight;
         this.clothPos = clothPos;
-        this.softBodyHelpers = new Ammo.btSoftBodyHelpers();
+        this.softBodyHelpers = new this.Ammo.btSoftBodyHelpers();
 
         this.clothNumSegmentsZ = clothWidth * 5;
         this.clothNumSegmentsY = clothHeight * 5;
         this.clothSegmentLengthZ = clothWidth / clothNumSegmentsZ;
         this.clothSegmentLengthY = clothHeight / clothNumSegmentsY;
         
-		this.clothCorner00 = new Ammo.btVector3( clothPos.x, clothPos.y + clothHeight, clothPos.z );
-		this.clothCorner01 = new Ammo.btVector3( clothPos.x, clothPos.y + clothHeight, clothPos.z - clothWidth );
-		this.clothCorner10 = new Ammo.btVector3( clothPos.x, clothPos.y, clothPos.z );
-		this.clothCorner11 = new Ammo.btVector3( clothPos.x, clothPos.y, clothPos.z - clothWidth );
+		this.clothCorner00 = new this.Ammo.btVector3( clothPos.x, clothPos.y + clothHeight, clothPos.z );
+		this.clothCorner01 = new this.Ammo.btVector3( clothPos.x, clothPos.y + clothHeight, clothPos.z - clothWidth );
+		this.clothCorner10 = new this.Ammo.btVector3( clothPos.x, clothPos.y, clothPos.z );
+		this.clothCorner11 = new this.Ammo.btVector3( clothPos.x, clothPos.y, clothPos.z - clothWidth );
 
         var clothGeometry = new THREE.PlaneBufferGeometry( clothWidth, clothHeight, clothNumSegmentsZ, clothNumSegmentsY );
         clothGeometry.rotateY( Math.PI * 0.5 )
@@ -32,7 +34,7 @@ class softBody extends Physics{
         cloth.castShadow = true;
         cloth.receiveShadow = true;
 
-        this.cloth = physicsWorld.createClothPatch();
+        this.cloth = physicsWorld.createClothPatch(worldInfo, this.clothCorner00, this.clothCorner01, this.clothCorner10, this.clothCorner11, this.clothNumSegmentsZ, this.clothNumSegmentsY, 1, physicsWorld );
 
     }
 

@@ -6,7 +6,7 @@ import { setupUIHandlers } from'./UI.js'
 
 // Scene Setup
 Ammo().then(function(Ammo) {
-	const physicsWorld = new Physics();
+	const physicsWorld = new Physics(Ammo);
 	console.log("Physics world ready.")
 	// Get the canvas element
 	const canvas = document.getElementById('canvas');
