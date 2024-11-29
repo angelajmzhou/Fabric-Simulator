@@ -91,29 +91,29 @@ export function setupUIHandlers() {
     if (event.key.toLowerCase() === 's') {
       console.log('[S] Key pressed');
       clipPointToModel();
-      SButton.style.backgroundColor = "#ffcccc";
+      SButton.classList.add('active-button');
     }
     if (event.key.toLowerCase() === 'a') {
-      AButton.style.backgroundColor = "#ffcccc";
+      AButton.classList.add('active-button');
     }
     if (event.key.toLowerCase() === 'l') {
-      LButton.style.backgroundColor = "#ffcccc";
+      LButton.classList.add('active-button');
     }
   });
 
   window.addEventListener('keyup', (event) => {
     if (event.key.toLowerCase() === 's') {
-      SButton.style.backgroundColor = "#ecf1fb";
+      SButton.classList.remove('active-button');
     }
     if (event.key.toLowerCase() === 'a') {
       console.log('[A] Key released');
       showClippedPoints();
-      AButton.style.backgroundColor = "#ecf1fb";
+      AButton.classList.remove('active-button');
     }
     if (event.key.toLowerCase() === 'l') {
       console.log('[L] Key released');
       clearClippedPoints();
-      LButton.style.backgroundColor = "#ecf1fb";
+      LButton.classList.remove('active-button');
     }
   });
 }
