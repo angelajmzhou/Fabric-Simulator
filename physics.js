@@ -91,7 +91,7 @@ class Physics {
 * Add a rigid body to the physics world.
 * @param {THREE.Group} fbx_model instance of a loaded FBX model
 */
-addRigid(fbx_model) {
+addModel(fbx_model) {
     const meshShape = this.createTriangleMeshCollisionShape(fbx_model);
     const transform = this.getTransform(fbx_model);
     const motionState = new this.Ammo.btDefaultMotionState(transform);
@@ -105,11 +105,36 @@ addRigid(fbx_model) {
 
     this.physicsWorld.addRigidBody(rigidBody);
 
-    this.objects.push(rigidBody); 
+    this.objects.push({physicsBody: rigidBody, mesh: fbx_model}); 
 
     return rigidBody;
 }
 
+/**
+* Add a rigid body to the physics world.
+* @param {Ammo.meshShape} shape shape of object
+* @param {Ammo.btVector3} origin origin(location) of object
+* @param {Ammo.mesh} mesh mesh of model
+*/
+addObject(shape, origin, mesh) {
+    const transform = new this.Ammo.btTransform();
+    transform.setIdentity();
+    transform.setOrigin(origin);
+    const motionState = new this.Ammo.btDefaultMotionState(transform);
+    const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
+        0, //mass
+        motionState,
+        shape,
+        new this.Ammo.btVector3(0, 0, 0) //local inertia
+    )
+    const rigidBody = new this.Ammo.btRigidBody(rbInfo);
+
+    this.physicsWorld.addRigidBody(rigidBody);
+
+    this.objects.push({physicsBody: rigidBody, mesh: mesh}); 
+
+    return rigidBody;
+}
 /**
 * Calculate transform of a loaded model
 * @param {THREE.Group} fbx_model instance of a loaded FBX model
@@ -187,32 +212,31 @@ createTriangleMeshCollisionShape(mesh) {
 
         // Iterate over all rigid bodies in the physics world
         // `this.objects` is assumed to be a list of rigid bodies added earlier
-        this.objects.forEach((body) => {
+        this.objects.forEach(({ physicsBody, mesh }) => {
             // Create a transform object to hold the rigid body's current state
             const transform = new this.Ammo.btTransform();
             
             // Get the current position and rotation of the rigid body from Ammo.js
-            body.getMotionState().getWorldTransform(transform);
-
+            physicsBody.getMotionState().getWorldTransform(transform);
+        
             // Extract the position (origin) of the rigid body
             const origin = transform.getOrigin();
-
+        
             // Extract the rotation (quaternion) of the rigid body
             const rotation = transform.getRotation();
-
-            // If the rigid body is linked to a rendering object (e.g., a Three.js mesh)
-            if (body.mesh) {
+        
+            // Update the mesh if it exists
+            if (mesh) {
                 // Update the mesh's position to match the rigid body's position
-                body.mesh.position.set(origin.x(), origin.y(), origin.z());
-
+                mesh.position.set(origin.x(), origin.y(), origin.z());
+        
                 // Update the mesh's rotation to match the rigid body's rotation
-                body.mesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
+                mesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
             }
-
+        
             // Free the memory used by the transform object to prevent memory leaks
             this.Ammo.destroy(transform);
         });
-
     }
 }
 export default Physics

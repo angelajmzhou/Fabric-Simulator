@@ -29,7 +29,7 @@ Ammo().then(function(Ammo) {
 	
 	const renderer = new THREE.WebGLRenderer({ canvas });
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	renderer.setClearColor(0xA3A3A3);
+	//renderer.setClearColor(0xA3A3A3);
 	
 	// Lighting
 	const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -42,9 +42,21 @@ Ammo().then(function(Ammo) {
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 	  mannequin = fbx;
 	  mannequin.scale.set(0.001, 0.001, 0.001);
-	  physics.addRigid(mannequin);
+	  physics.addModel(mannequin);
 	  scene.add(mannequin);
 	});
+
+	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(50, 0.5, 50));
+	const origin = new Ammo.btVector3(0,-0.5,0);
+
+	// Three.js floor mesh setup
+	const floorGeometry = new THREE.BoxGeometry(100, 1, 100);
+	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
+	const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+	floorMesh.receiveShadow = true;
+	physics.addObject(floorShape, origin, floorMesh);
+	scene.add(floorMesh);
+
 	
 	// Camera Controls
 	const controls = new OrbitControls(camera, renderer.domElement);
