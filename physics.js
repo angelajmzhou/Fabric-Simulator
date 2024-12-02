@@ -1,4 +1,5 @@
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import * as THREE from 'three';
 
 /* Sources:
  * https://medium.com/@bluemagnificent/intro-to-javascript-3d-physics-using-ammo-js-and-three-js-dd48df81f591
@@ -8,6 +9,8 @@ class Physics {
     constructor(Ammo) {
         this.Ammo = Ammo;
         this.objects = []; // Track objects added to the physics world
+        this.softbodies = []; // Track objects added to the physics world
+
 		this.margin = 0.05;
         this.time = performance.now();
 
@@ -173,8 +176,131 @@ createTriangleMeshCollisionShape(meshGroup) {
     const shape = new this.Ammo.btBvhTriangleMeshShape(triangleMesh, isStatic);
 
     return shape;
-}
+    }
 
+
+    /**
+     * @param {number} clothWidth Width of the cloth
+     * @param {number} clothHeight Height of the cloth
+     * @param {THREE.Vector3} clothPos Position of the cloth in world space
+     * @param {number} margin Collision margin for the soft body
+     */
+    createCloth(clothWidth = 4, clothHeight = 3, clothPos = new THREE.Vector3(0, 0, 2), margin = 0.05) {
+        const clothNumSegmentsZ = clothWidth * 5;
+        const clothNumSegmentsY = clothHeight * 5;
+        const clothSegmentLengthZ = clothWidth / clothNumSegmentsZ;
+        const clothSegmentLengthY = clothHeight / clothNumSegmentsY;
+
+        // Three.js cloth mesh setup
+        const clothGeometry = new THREE.PlaneGeometry(clothWidth, clothHeight, clothNumSegmentsZ, clothNumSegmentsY);
+        clothGeometry.rotateY(Math.PI * 0.5);
+        clothGeometry.translate(clothPos.x, clothPos.y + clothHeight * 0.5, clothPos.z - clothWidth * 0.5);
+
+        const clothMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+        const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
+
+        // Define corners of the cloth
+        const clothCorner00 = new this.Ammo.btVector3(clothPos.x, clothPos.y + clothHeight, clothPos.z);
+        const clothCorner01 = new this.Ammo.btVector3(clothPos.x, clothPos.y + clothHeight, clothPos.z - clothWidth);
+        const clothCorner10 = new this.Ammo.btVector3(clothPos.x, clothPos.y, clothPos.z);
+        const clothCorner11 = new this.Ammo.btVector3(clothPos.x, clothPos.y, clothPos.z - clothWidth);
+
+        // Create the soft body
+        const softBodyHelpers = new this.Ammo.btSoftBodyHelpers();
+        const clothSoftBody = softBodyHelpers.CreatePatch(
+            this.physicsWorld.getWorldInfo(),
+            clothCorner00,
+            clothCorner01,
+            clothCorner10,
+            clothCorner11,
+            clothNumSegmentsZ + 1,
+            clothNumSegmentsY + 1,
+            0, // Fixed corners (e.g., 0b1010 fixes top-left and bottom-right corners)
+            true // Generate diagonal links
+        );
+
+        // Soft body configuration
+        const sbConfig = clothSoftBody.get_m_cfg();
+        sbConfig.set_viterations(10);
+        sbConfig.set_piterations(10);
+        sbConfig.set_kDF(0.5); // Dynamic friction
+        sbConfig.set_kDP(0.005); // Damping
+        sbConfig.set_kPR(1); // Pressure resistance
+        sbConfig.set_kVCF(0.5); // Volume conservation factor
+        sbConfig.set_kMT(0.1); // Pose matching coefficient
+
+        // Set mass for the cloth
+        clothSoftBody.setTotalMass(0.9, false);
+
+        // Set collision margin
+        Ammo.castObject(clothSoftBody, this.Ammo.btCollisionObject)
+            .getCollisionShape()
+            .setMargin(margin);
+
+        // Add soft body to the physics world
+        this.physicsWorld.addSoftBody(clothSoftBody, 1, -1);
+
+        // Keep the cloth active
+        clothSoftBody.setActivationState(4);
+
+        // Link physics body to Three.js mesh
+        this.softbodies.push({ physicsBody: clothSoftBody, mesh: cloth });
+
+        return cloth;
+    }
+
+
+    changeClothTexture(cloth){
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.load("../textures/grid.png", (texture) => {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(this.clothNumSegmentsZ, this.clothNumSegmentsY);
+            cloth.material.map = texture;
+            cloth.material.needsUpdate = true;
+        });
+    }
+
+    clothUpdate(clothSoftBody) {
+        // Access Ammo.js soft body nodes
+        const softBodyNodes = clothSoftBody.get_m_nodes();
+        const geometry = this.cloth.geometry;
+        const position = geometry.attributes.position;
+    
+        // Ensure node count matches geometry vertex count
+        if (softBodyNodes.size() !== position.count) {
+            console.error("Mismatch between soft body nodes and geometry vertices.");
+            return;
+        }
+    
+        // Update each vertex position
+        for (let i = 0; i < position.count; i++) {
+            const node = softBodyNodes.at(i); // Get the ith node of Ammo.btAlignedObjectArray
+            const nodePosition = node.get_m_x(); // Get position of node as Ammo.btVector3
+    
+            // Extract position values
+            const x = nodePosition.x();
+            const y = nodePosition.y();
+            const z = nodePosition.z();
+    
+            // Check for NaN values
+            if (isNaN(x) || isNaN(y) || isNaN(z)) {
+                console.error(`NaN detected at vertex ${i}: x=${x}, y=${y}, z=${z}`);
+                continue; // Skip updating this vertex
+            }
+    
+            // Set position in Three.js geometry
+            position.setXYZ(i, x, y, z);
+        }
+    
+        // Notify Three.js to update the geometry
+        position.needsUpdate = true;
+    
+        // Optional: Log for debugging (remove for production)
+        // console.log(position);
+    }
+    
+    
 
    /**
  * Run the physics simulation.
@@ -186,34 +312,10 @@ createTriangleMeshCollisionShape(meshGroup) {
         // `deltaTime`: The time elapsed since the last simulation step
         // `10`: Maximum number of substeps to perform if the simulation is lagging
         this.physicsWorld.stepSimulation(deltaTime, 10);
-
-        // Iterate over all rigid bodies in the physics world
-        // `this.objects` is assumed to be a list of rigid bodies added earlier
-        this.objects.forEach(({ physicsBody, mesh }) => {
-            // Create a transform object to hold the rigid body's current state
-            const transform = new this.Ammo.btTransform();
-            
-            // Get the current position and rotation of the rigid body from Ammo.js
-            physicsBody.getMotionState().getWorldTransform(transform);
-        
-            // Extract the position (origin) of the rigid body
-            const origin = transform.getOrigin();
-        
-            // Extract the rotation (quaternion) of the rigid body
-            const rotation = transform.getRotation();
-        
-            // Update the mesh if it exists
-            if (mesh) {
-                // Update the mesh's position to match the rigid body's position
-                mesh.position.set(origin.x(), origin.y(), origin.z());
-        
-                // Update the mesh's rotation to match the rigid body's rotation
-                mesh.quaternion.set(rotation.x(), rotation.y(), rotation.z(), rotation.w());
-            }
-        
-            // Free the memory used by the transform object to prevent memory leaks
-            this.Ammo.destroy(transform);
-        });
-    }
+        this.softbodies.forEach(({ physicsBody, mesh }) => {
+        print(physicsBody)
+        this.clothUpdate(physicsBody);
+        }
+    )};
 }
 export default Physics

@@ -17,10 +17,10 @@ Ammo().then(function(Ammo) {
 	console.log('Physics world initialized');
 
   	// Now create the soft body
-  	const cloth = new softBody(Ammo, physics);
+  	//const cloth = new softBody(Ammo, physics);
 
   	// Access the cloth mesh and add it to the scene
-  	scene.add(cloth.get());
+  	//scene.add(cloth.get());
 
 	// Raycaster stuff
 	const raycaster = new THREE.Raycaster();
@@ -57,7 +57,13 @@ Ammo().then(function(Ammo) {
 	physics.addObject(floorShape, origin, floorMesh);
 	scene.add(floorMesh);
 
-	
+	let cloth = physics.createCloth();
+	physics.changeClothTexture(cloth);
+
+	cloth.castShadow = true;
+	cloth.receiveShadow = true;
+	scene.add(cloth);
+
 	// Camera Controls
 	const controls = new OrbitControls(camera, renderer.domElement);
 
@@ -72,7 +78,6 @@ Ammo().then(function(Ammo) {
 		requestAnimationFrame(animate);
 		const deltaTime = clock.getDelta();
 		physics.simulate(deltaTime);
-		cloth.update();
 		renderer.render(scene, camera);
 	}
 	animate();
