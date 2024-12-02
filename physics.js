@@ -295,6 +295,7 @@ createTriangleMeshCollisionShape(meshGroup) {
 
     clothUpdate(clothSoftBody, cloth) {
         const geometry = cloth.geometry;
+        const numVerts = clothPositions.length/3;
         const clothPositions = geometry.attributes.position.array;
         const softBodyNodes = clothSoftBody.get_m_nodes();
       
