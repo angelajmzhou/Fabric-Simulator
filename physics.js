@@ -194,7 +194,7 @@ createTriangleMeshCollisionShape(meshGroup) {
         const clothNumSegmentsZ = clothWidth * 5;
         const clothNumSegmentsY = clothHeight * 5;
       
-        // Create Three.js geometry using PlaneBufferGeometry
+        // Create Three.js geometry using PlaneGeometry
 
         const clothGeometry = new THREE.PlaneGeometry(
           clothWidth,
@@ -296,7 +296,6 @@ createTriangleMeshCollisionShape(meshGroup) {
     clothUpdate(clothSoftBody, cloth) {
         const geometry = cloth.geometry;
         const clothPositions = geometry.attributes.position.array;
-        const numVerts = clothPositions.length / 3;
         const softBodyNodes = clothSoftBody.get_m_nodes();
       
         if (softBodyNodes.size() !== numVerts) {
