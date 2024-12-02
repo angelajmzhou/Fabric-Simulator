@@ -77,6 +77,7 @@ Ammo().then(function(Ammo) {
 	function animate() {
 		requestAnimationFrame(animate);
 		const deltaTime = clock.getDelta();
+		console.log(deltaTime);
 		physics.simulate(deltaTime);
 		renderer.render(scene, camera);
 	}
