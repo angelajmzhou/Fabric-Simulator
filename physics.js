@@ -47,31 +47,6 @@ class Physics {
     }
     
 
-    createRigidBodyForTriangleMesh(fbx, collisionShape, mass = 0) {
-
-        const transform = new this.Ammo.btTransform();
-        transform.setIdentity();
-    
-        const position = mesh.position;
-        transform.setOrigin(new this.Ammo.btVector3(position.x, position.y, position.z));
-    
-        const rotation = mesh.quaternion;
-        transform.setRotation(new this.Ammo.btQuaternion(rotation.x, rotation.y, rotation.z, rotation.w));
-    
-        const motionState = new this.Ammo.btDefaultMotionState(transform);
-        const localInertia = new this.Ammo.btVector3(0, 0, 0);
-    
-        // No local inertia for static objects
-        if (mass > 0) {
-            collisionShape.calculateLocalInertia(mass, localInertia);
-        }
-    
-        const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(mass, motionState, collisionShape, localInertia);
-        const rigidBody = new this.Ammo.btRigidBody(rbInfo);
-    
-        physicsWorld.addRigidBody(rigidBody);
-        return rigidBody;
-    }
     
     generateSoftBody(worldInfo, corner00, corner10, corner01, corner11, resx, resy, fixedCorners, gendiags){
     return this.softBodyHelper.CreatePatch(
@@ -152,45 +127,46 @@ getTransform(fbx_model){
 
     return transform;
 }
-
 /**
-* loads a collision shape for static mannequin
-* @param {THREE.Group} mesh instance of a loaded FBX model
-*/
-createTriangleMeshCollisionShape(mesh) {
+ * Loads a collision shape for a static mannequin
+ * @param {THREE.Group} meshGroup Instance of a loaded FBX model
+ */
+createTriangleMeshCollisionShape(meshGroup) {
     const triangleMesh = new this.Ammo.btTriangleMesh();
 
-    // Iterate through the mesh geometry
-    mesh.traverse((child) => {
-        if (child.isMesh) {
-            const geometry = child.geometry;
-            const positionAttribute = geometry.attributes.position;
+    // Assume the group has only one mesh
+    const child = meshGroup.children[0];
+    if (child.isMesh) {
+        const geometry = child.geometry;
+        const positionAttribute = geometry.attributes.position;
 
-            // Add triangles to the btTriangleMesh
-            for (let i = 0; i < positionAttribute.count; i += 3) {
-                const vertex1 = new this.Ammo.btVector3(
-                    positionAttribute.getX(i),
-                    positionAttribute.getY(i),
-                    positionAttribute.getZ(i)
-                );
-                const vertex2 = new this.Ammo.btVector3(
-                    positionAttribute.getX(i + 1),
-                    positionAttribute.getY(i + 1),
-                    positionAttribute.getZ(i + 1)
-                );
-                const vertex3 = new this.Ammo.btVector3(
-                    positionAttribute.getX(i + 2),
-                    positionAttribute.getY(i + 2),
-                    positionAttribute.getZ(i + 2)
-                );
+        // Add triangles to the btTriangleMesh
+        for (let i = 0; i < positionAttribute.count; i += 3) {
+            const vertex1 = new this.Ammo.btVector3(
+                positionAttribute.getX(i),
+                positionAttribute.getY(i),
+                positionAttribute.getZ(i)
+            );
+            const vertex2 = new this.Ammo.btVector3(
+                positionAttribute.getX(i + 1),
+                positionAttribute.getY(i + 1),
+                positionAttribute.getZ(i + 1)
+            );
+            const vertex3 = new this.Ammo.btVector3(
+                positionAttribute.getX(i + 2),
+                positionAttribute.getY(i + 2),
+                positionAttribute.getZ(i + 2)
+            );
 
-                triangleMesh.addTriangle(vertex1, vertex2, vertex3, true);
-                this.Ammo.destroy(vertex1);
-                this.Ammo.destroy(vertex2);
-                this.Ammo.destroy(vertex3);
-            }
+            triangleMesh.addTriangle(vertex1, vertex2, vertex3, true);
+            this.Ammo.destroy(vertex1);
+            this.Ammo.destroy(vertex2);
+            this.Ammo.destroy(vertex3);
         }
-    });
+    } else {
+        console.warn("The provided group does not contain a valid mesh.");
+        return null;
+    }
 
     // Create a collision shape from the triangle mesh
     const isStatic = true; // For static objects
@@ -198,6 +174,7 @@ createTriangleMeshCollisionShape(mesh) {
 
     return shape;
 }
+
 
    /**
  * Run the physics simulation.

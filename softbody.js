@@ -118,6 +118,7 @@ class softBody {
     
         // Notify Three.js to update the geometry
         position.needsUpdate = true;
+        console.log(position);
     }
 }
 
