@@ -226,7 +226,7 @@ createTriangleMeshCollisionShape(mesh) {
           clothCorner11,
           clothNumSegmentsZ + 1,
           clothNumSegmentsY + 1,
-          1 + 2, // Fixed corners
+          0, // Fixed corners
           true // Generate diagonal links
         );
       

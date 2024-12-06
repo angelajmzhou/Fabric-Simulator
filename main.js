@@ -49,13 +49,14 @@ Ammo().then(function(Ammo) {
 	  scene.add(fbx);
 	});
 
-	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(50, 0.5, 50));
-	const origin = new Ammo.btVector3(0,-0.5,0);
+	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(2.5, 0.5, 2.5));
+	const origin = new Ammo.btVector3(0,-1,0);
 
 	// Three.js floor mesh setup
-	const floorGeometry = new THREE.BoxGeometry(100, 1, 100);
+	const floorGeometry = new THREE.BoxGeometry(5, 1, 5);
 	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
 	const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+	floorMesh.position.y -= 0.45;
 	floorMesh.receiveShadow = true;
 	physics.addObject(floorMesh, floorShape, origin, floorMesh);
 	scene.add(floorMesh);
