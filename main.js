@@ -40,10 +40,9 @@ Ammo().then(function(Ammo) {
 	const loader = new FBXLoader();
 	let mannequin;
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
-	  mannequin = fbx;
-	  mannequin.scale.set(0.001, 0.001, 0.001);
-	  physics.addModel(mannequin);
-	  scene.add(mannequin);
+	  fbx.scale.set(0.001, 0.001, 0.001);
+	  physics.addModel(fbx);
+	  scene.add(fbx);
 	});
 
 	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(50, 0.5, 50));
@@ -54,7 +53,7 @@ Ammo().then(function(Ammo) {
 	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
 	const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
 	floorMesh.receiveShadow = true;
-	physics.addObject(floorShape, origin, floorMesh);
+	physics.addObject(floorMesh, floorShape, origin, floorMesh);
 	scene.add(floorMesh);
 
 	let cloth = physics.createCloth();
@@ -77,7 +76,6 @@ Ammo().then(function(Ammo) {
 	function animate() {
 		requestAnimationFrame(animate);
 		const deltaTime = clock.getDelta();
-		console.log(deltaTime);
 		physics.simulate(deltaTime);
 		renderer.render(scene, camera);
 	}
