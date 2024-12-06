@@ -141,28 +141,33 @@ getTransform(fbx_model){
  * @param {THREE.Mesh} mesh Instance of a loaded FBX model
  */
 createTriangleMeshCollisionShape(mesh) {
-  const ammoTriangleMesh = new Ammo.btTriangleMesh();
   const geometry = mesh.geometry;
 
-  const vertices = geometry.attributes.position.array;
-  
-  for (let i = 0; i < vertices.length; i += 9) {
-    const v0 = new Ammo.btVector3(vertices[i], vertices[i + 1], vertices[i + 2]);
-    const v1 = new Ammo.btVector3(vertices[i + 3], vertices[i + 4], vertices[i + 5]);
-    const v2 = new Ammo.btVector3(vertices[i + 6], vertices[i + 7], vertices[i + 8]);
-  
-    ammoTriangleMesh.addTriangle(v0, v1, v2, true);
-  
-    // Free memory for temporary vectors
-    Ammo.destroy(v0);
-    Ammo.destroy(v1);
-    Ammo.destroy(v2);
-  }
-  const ammoShape = new Ammo.btBvhTriangleMeshShape(ammoTriangleMesh, true, true);
-
-  console.log("Collision shape created:", ammoShape.constructor.name);
-  
-  return ammoShape;
+  const meshShape = new Ammo.btTriangleMesh(true, true);
+    const vertices = geometry.attributes.position?.array || [];
+    for (let i = 0; i < vertices.length; i += 9) {
+      meshShape.addTriangle(
+        new Ammo.btVector3(
+          vertices[i],
+          vertices[i+1],
+          vertices[i+2]
+        ),
+        new Ammo.btVector3(
+          vertices[i + 3],
+          vertices[i + 4],
+          vertices[i + 5]
+        ),
+        new Ammo.btVector3(
+          vertices[i + 6],
+          vertices[i + 7],
+          vertices[i + 8]
+        ),
+        false
+      );
+    }
+    const shape = new Ammo.btConvexTriangleMeshShape(meshShape, true, true);
+    console.log("Collision shape created:", meshShape.constructor.name);
+    return shape;
 }
 
 
