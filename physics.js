@@ -47,6 +47,7 @@ class Physics {
 
         // Set gravity for the soft body solver as well
         this.worldInfo.set_m_gravity(new this.Ammo.btVector3(0, -10, 0));
+
     }
     
 
@@ -142,10 +143,9 @@ getTransform(fbx_model){
  */
 createTriangleMeshCollisionShape(mesh) {
   const geometry = mesh.geometry;
-  const N = 15;
   const meshShape = new Ammo.btTriangleMesh(true, true);
   const vertices = geometry.attributes.position.array;
-  for (let i = 0; i < vertices.length; i += 9 * N) { // Skip N triangles
+  for (let i = 0; i < vertices.length; i += 9) {
     meshShape.addTriangle(
       new Ammo.btVector3(vertices[i], vertices[i + 1], vertices[i + 2]),
       new Ammo.btVector3(vertices[i + 3], vertices[i + 4], vertices[i + 5]),
@@ -153,7 +153,8 @@ createTriangleMeshCollisionShape(mesh) {
       true
     );
   }  
-    const shape = new Ammo.btConvexTriangleMeshShape(meshShape, true, true);
+  
+    const shape = new Ammo.btBvhTriangleMeshShape(meshShape, false, true);
     console.log("Collision shape created:", meshShape.constructor.name);
     return shape;
 }
@@ -168,11 +169,11 @@ createTriangleMeshCollisionShape(mesh) {
     createCloth(
         clothWidth = 4,
         clothHeight = 3,
-        clothPos = new THREE.Vector3(0, 4, 2),
+        clothPos = new THREE.Vector3(0, 6, 2),
         margin = 0.5
       ) {
-        const clothNumSegmentsZ = clothWidth * 4;
-        const clothNumSegmentsY = clothHeight * 4;
+        const clothNumSegmentsZ = clothWidth * 5;
+        const clothNumSegmentsY = clothHeight * 5;
       
         // Create Three.js geometry using PlaneGeometry
 
@@ -343,12 +344,15 @@ createTriangleMeshCollisionShape(mesh) {
     simulate(deltaTime) {
         // Step the physics simulation forward
         //let dt = Math.min(deltaTime, 1 / 30); // Cap deltaTime to ~33ms
-        this.physicsWorld.stepSimulation(deltaTime, 5);
+        this.physicsWorld.stepSimulation(1/60, 2);
    
         // Update each soft body
         this.softbodies.forEach(({ physicsBody, mesh }) => {
             this.clothUpdate(physicsBody, mesh);
         });
     }    
+
+         
+  
 }
 export default Physics

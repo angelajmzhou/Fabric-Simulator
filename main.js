@@ -60,7 +60,7 @@ Ammo().then(function(Ammo) {
 	floorMesh.receiveShadow = true;
 	physics.addObject(floorMesh, floorShape, origin, floorMesh);
 	scene.add(floorMesh);
-
+	
 	let cloth = physics.createCloth();
 	physics.changeClothTexture(cloth);
 
@@ -92,4 +92,3 @@ Ammo().then(function(Ammo) {
 	animate();
 
 });
-
