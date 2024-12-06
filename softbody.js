@@ -61,7 +61,7 @@ class softBody {
             this.clothCorner11,
             this.clothNumSegmentsZ + 1,
             this.clothNumSegmentsY + 1,
-            0, // Set fixed corners if any
+            1 + 2, // Set fixed corners if any
             true // Generate diagonal links
         );
 

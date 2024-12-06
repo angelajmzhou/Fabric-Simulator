@@ -226,7 +226,7 @@ createTriangleMeshCollisionShape(mesh) {
           clothCorner11,
           clothNumSegmentsZ + 1,
           clothNumSegmentsY + 1,
-          0, // Fixed corners
+          1 + 2, // Fixed corners
           true // Generate diagonal links
         );
       
@@ -272,6 +272,35 @@ createTriangleMeshCollisionShape(mesh) {
             cloth.material.needsUpdate = true;
         });
     }
+    
+    translateClothFromTop(offsetX, offsetY, offsetZ) {
+      if (this.softbodies.length === 0) {
+          console.error("No soft body found to translate.");
+          return;
+      }
+  
+      const { physicsBody: clothSoftBody, mesh: cloth } = this.softbodies[0]; // Access the first soft body
+  
+      // Get the nodes of the soft body
+      const nodes = clothSoftBody.get_m_nodes();
+      const numSegmentsX = Math.sqrt(nodes.size()); // Assume grid is square for simplicity
+  
+      // Move the top row of nodes
+      for (let i = 0; i < numSegmentsX; i++) {
+          const node = nodes.at(i); // Top row nodes are the first N nodes
+          const pos = node.get_m_x();
+          pos.setX(pos.x() + offsetX);
+          pos.setY(pos.y() + offsetY);
+          pos.setZ(pos.z() + offsetZ);
+          node.set_m_x(pos);
+      }
+  
+      // Update the Three.js mesh position to reflect the soft body
+      cloth.position.x += offsetX;
+      cloth.position.y += offsetY;
+      cloth.position.z += offsetZ;
+  }
+  
 
     clothUpdate(clothSoftBody, cloth) {
         const geometry = cloth.geometry;

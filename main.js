@@ -3,10 +3,11 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
 import softBody from './softbody.js';
-import { setupUIHandlers, initializeRaycaster } from'./UI.js'
+import { setupUIHandlers, initializeRaycaster, handleClothTranslationFromTop  } from'./UI.js'
 
 // Get the canvas element
 const canvas = document.getElementById('canvas');
+let physicsInstance;
 	
 // Scene Setup
 const scene = new THREE.Scene();
@@ -16,6 +17,9 @@ Ammo().then(function(Ammo) {
   	const physics = new Physics(Ammo);
 	console.log('Physics world initialized');
 
+	physicsInstance = physics; 
+	const clothe = physics.createCloth(); // Create the cloth
+    scene.add(clothe); // Add the cloth to the scene
   	// Now create the soft body
   	//const cloth = new softBody(Ammo, physics);
 
@@ -77,6 +81,11 @@ Ammo().then(function(Ammo) {
 		requestAnimationFrame(animate);
 		const deltaTime = clock.getDelta();
 		physics.simulate(deltaTime);
+		// Handle cloth translation
+		if (physicsInstance) {
+			handleClothTranslationFromTop(physicsInstance);
+		}
+		
 		renderer.render(scene, camera);
 	}
 	animate();

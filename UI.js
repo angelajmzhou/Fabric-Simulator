@@ -16,6 +16,33 @@ export function initializeRaycaster(raycasterInstance, sceneInstance, cameraInst
   camera = cameraInstance;
 }
 
+
+const translationSpeed = 0.1; // Adjust speed as necessary
+
+export function handleClothTranslationFromTop(physicsInstance) {
+  const translationSpeed = 0.1;
+
+  if (Input.isKeyDown('ArrowUp')) {
+      physicsInstance.translateClothFromTop(0, 0, -translationSpeed); // Move forward
+  }
+  if (Input.isKeyDown('ArrowDown')) {
+      physicsInstance.translateClothFromTop(0, 0, translationSpeed); // Move backward
+  }
+  if (Input.isKeyDown('ArrowLeft')) {
+      physicsInstance.translateClothFromTop(-translationSpeed, 0, 0); // Move left
+  }
+  if (Input.isKeyDown('ArrowRight')) {
+      physicsInstance.translateClothFromTop(translationSpeed, 0, 0); // Move right
+  }
+  if (Input.isKeyDown('t')) {
+      physicsInstance.translateClothFromTop(0, translationSpeed, 0); // Move up
+  }
+  if (Input.isKeyDown('g')) {
+      physicsInstance.translateClothFromTop(0, -translationSpeed, 0); // Move down
+  }
+}
+
+
 // Step 1: Get the current mouse position in normalized device coordinates (NDC)
 // Step 2: Update the raycaster to use the mouse position and camera
 // Step 3: Check for intersections with objects in the scene
