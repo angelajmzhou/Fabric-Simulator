@@ -11,7 +11,7 @@ class Physics {
         this.objects = []; // Track objects added to the physics world
         this.softbodies = []; // Track objects added to the physics world
 
-		this.margin = 0.05;
+		    this.margin = 0.05;
         this.time = performance.now();
 
 
@@ -47,24 +47,8 @@ class Physics {
 
         // Set gravity for the soft body solver as well
         this.worldInfo.set_m_gravity(new this.Ammo.btVector3(0, -10, 0));
-
     }
-    
 
-    
-    generateSoftBody(worldInfo, corner00, corner10, corner01, corner11, resx, resy, fixedCorners, gendiags){
-    return this.softBodyHelper.CreatePatch(
-        this.worldInfo,          // 1. btSoftBodyWorldInfo object
-        corner00,           // 2. btVector3 (bottom-left corner)
-        corner10,           // 3. btVector3 (bottom-right corner)
-        corner01,           // 4. btVector3 (top-left corner)
-        corner11,           // 5. btVector3 (top-right corner)
-        resx,               // 6. Integer (number of segments along X-axis)
-        resy,               // 7. Integer (number of segments along Y-axis)
-        fixedCorners,       // 8. Integer (bitmask to define fixed corners)
-        gendiags            // 9. Boolean (whether to generate diagonal links)
-    );
-    }
 
 /**
 * Add a rigid body to the physics world.
@@ -82,10 +66,13 @@ addModel(fbx_model) {
         new this.Ammo.btVector3(0, 0, 0) //local inertia
     )
     const rigidBody = new this.Ammo.btRigidBody(rbInfo);
+    rigidBody.getCollisionShape().setMargin(this.margin);
+
+    this.physicsWorld.addRigidBody(rigidBody, 1, -1);
 
     mesh.userData.physicsBody = rigidBody;
 
-    this.physicsWorld.addRigidBody(rigidBody);
+    rigidBody.setActivationState(4); // Disable deactivation
 
     this.objects.push({physicsBody: rigidBody, mesh: fbx_model}); 
 
@@ -114,7 +101,11 @@ addObject(threeObj, shape, origin, mesh) {
 
     threeObj.userData.physicsBody = rigidBody;
 
-    this.physicsWorld.addRigidBody(rigidBody);
+    rigidBody.getCollisionShape().setMargin(this.margin);
+
+    this.physicsWorld.addRigidBody(rigidBody, 1, -1);
+
+    rigidBody.setActivationState(4); // Disable deactivation
 
     this.objects.push({physicsBody: rigidBody, mesh: mesh}); 
 
@@ -157,7 +148,7 @@ createTriangleMeshCollisionShape(mesh) {
     const shape = new Ammo.btBvhTriangleMeshShape(meshShape, false, true);
     console.log("Collision shape created:", meshShape.constructor.name);
     return shape;
-}
+    }
 
 
     /**
@@ -176,7 +167,7 @@ createTriangleMeshCollisionShape(mesh) {
         const clothNumSegmentsY = clothHeight * 5;
       
         // Create Three.js geometry using PlaneGeometry
-
+        
         const clothGeometry = new THREE.PlaneGeometry(
           clothWidth,
           clothHeight,
@@ -193,6 +184,7 @@ createTriangleMeshCollisionShape(mesh) {
         const clothMaterial = new THREE.MeshLambertMaterial({
           color: 0xffffff,
           side: THREE.DoubleSide,
+          //wireframe: true
         });
         const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
       
@@ -235,7 +227,7 @@ createTriangleMeshCollisionShape(mesh) {
         const sbConfig = clothSoftBody.get_m_cfg();
         sbConfig.set_viterations(10);
         sbConfig.set_piterations(10);
-      
+
         clothSoftBody.setTotalMass(0.9, false);
       
         Ammo.castObject(clothSoftBody, Ammo.btCollisionObject)
@@ -250,7 +242,7 @@ createTriangleMeshCollisionShape(mesh) {
         // Disable deactivation
         clothSoftBody.setActivationState(4);
       
-        this.softbodies.push({ physicsBody: clothSoftBody, mesh: cloth });
+        this.softbodies.push(cloth);
       
         // Clean up Ammo.js objects
         Ammo.destroy(clothCorner00);
@@ -260,7 +252,7 @@ createTriangleMeshCollisionShape(mesh) {
       
         return cloth;
       }
-      
+
 
 
     changeClothTexture(cloth){
@@ -273,7 +265,7 @@ createTriangleMeshCollisionShape(mesh) {
             cloth.material.needsUpdate = true;
         });
     }
-    
+
     translateClothFromTop(offsetX, offsetY, offsetZ) {
       if (this.softbodies.length === 0) {
           console.error("No soft body found to translate.");
@@ -303,12 +295,13 @@ createTriangleMeshCollisionShape(mesh) {
   }
   
 
-    clothUpdate(clothSoftBody, cloth) {
-        const geometry = cloth.geometry;
-        const clothPositions = geometry.attributes.position.array;
-        const numVerts = clothPositions.length/3;
+    clothUpdate(cloth) {
+        var clothSoftBody = cloth.userData.physicsBody;
+        var geometry = cloth.geometry;
+        var clothPositions = geometry.attributes.position.array;
+        var numVerts = clothPositions.length/3;
 
-        const softBodyNodes = clothSoftBody.get_m_nodes();
+        var softBodyNodes = clothSoftBody.get_m_nodes();
       
         if (softBodyNodes.size() !== numVerts) {
           console.error("Mismatch between soft body nodes and geometry vertices.");
@@ -344,15 +337,12 @@ createTriangleMeshCollisionShape(mesh) {
     simulate(deltaTime) {
         // Step the physics simulation forward
         //let dt = Math.min(deltaTime, 1 / 30); // Cap deltaTime to ~33ms
-        this.physicsWorld.stepSimulation(1/60, 2);
-   
+        this.physicsWorld.stepSimulation(1/60, 5);
+    
         // Update each soft body
-        this.softbodies.forEach(({ physicsBody, mesh }) => {
-            this.clothUpdate(physicsBody, mesh);
+        this.softbodies.forEach((cloth) => {
+            this.clothUpdate(cloth);
         });
     }    
-
-         
-  
 }
 export default Physics
