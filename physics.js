@@ -142,29 +142,17 @@ getTransform(fbx_model){
  */
 createTriangleMeshCollisionShape(mesh) {
   const geometry = mesh.geometry;
-
+  const N = 15;
   const meshShape = new Ammo.btTriangleMesh(true, true);
-    const vertices = geometry.attributes.position?.array || [];
-    for (let i = 0; i < vertices.length; i += 9) {
-      meshShape.addTriangle(
-        new Ammo.btVector3(
-          vertices[i],
-          vertices[i+1],
-          vertices[i+2]
-        ),
-        new Ammo.btVector3(
-          vertices[i + 3],
-          vertices[i + 4],
-          vertices[i + 5]
-        ),
-        new Ammo.btVector3(
-          vertices[i + 6],
-          vertices[i + 7],
-          vertices[i + 8]
-        ),
-        false
-      );
-    }
+  const vertices = geometry.attributes.position.array;
+  for (let i = 0; i < vertices.length; i += 9 * N) { // Skip N triangles
+    meshShape.addTriangle(
+      new Ammo.btVector3(vertices[i], vertices[i + 1], vertices[i + 2]),
+      new Ammo.btVector3(vertices[i + 3], vertices[i + 4], vertices[i + 5]),
+      new Ammo.btVector3(vertices[i + 6], vertices[i + 7], vertices[i + 8]),
+      true
+    );
+  }  
     const shape = new Ammo.btConvexTriangleMeshShape(meshShape, true, true);
     console.log("Collision shape created:", meshShape.constructor.name);
     return shape;
@@ -181,10 +169,10 @@ createTriangleMeshCollisionShape(mesh) {
         clothWidth = 4,
         clothHeight = 3,
         clothPos = new THREE.Vector3(0, 4, 2),
-        margin = 0.05
+        margin = 0.5
       ) {
-        const clothNumSegmentsZ = clothWidth * 5;
-        const clothNumSegmentsY = clothHeight * 5;
+        const clothNumSegmentsZ = clothWidth * 4;
+        const clothNumSegmentsY = clothHeight * 4;
       
         // Create Three.js geometry using PlaneGeometry
 
@@ -251,7 +239,7 @@ createTriangleMeshCollisionShape(mesh) {
       
         Ammo.castObject(clothSoftBody, Ammo.btCollisionObject)
           .getCollisionShape()
-          .setMargin(margin * 3); // Adjust margin as per the working example
+          .setMargin(margin); // Adjust margin as per the working example
       
         this.physicsWorld.addSoftBody(clothSoftBody, 1, -1);
       
