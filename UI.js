@@ -106,9 +106,9 @@ setupUIHandlers() {
   const LButton = document.getElementById("RemovePoints");
 
   // Button event listeners
-  document.getElementById('drawmodePoints').addEventListener('click', showClippedPoints);
-  document.getElementById('clipToModel').addEventListener('click', clipPointToModel);
-  document.getElementById('RemovePoints').addEventListener('click', clearClippedPoints);
+  document.getElementById('drawmodePoints').addEventListener('click', this.showClippedPoints);
+  document.getElementById('clipToModel').addEventListener('click', this.clipPointToModel);
+  document.getElementById('RemovePoints').addEventListener('click', this.clearClippedPoints);
 
   // Keyboard event listeners
   window.addEventListener('keydown', (event) => {
@@ -142,3 +142,4 @@ setupUIHandlers() {
   });
 }
 }
+export default UI

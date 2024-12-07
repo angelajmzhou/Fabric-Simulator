@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
 import UI from './UI.js';
 import softBody from './softbody.js';
-import { setupUIHandlers, initializeRaycaster, handleClothTranslationFromTop  , clipPointToModel} from'./UI.js'
+//import { setupUIHandlers, initializeRaycaster, handleClothTranslationFromTop  , clipPointToModel} from'./UI.js'
 
 // Get the canvas element
 const canvas = document.getElementById('canvas');
@@ -23,10 +23,11 @@ Ammo().then(function(Ammo) {
     scene.add(clothe); // Add the cloth to the scene
 
 
-	// Raycaster stuff
-	const raycaster = UI(scene, camera, physics);
 	const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 	camera.position.set(0, 20, 50);
+
+	// Raycaster
+	const raycaster = new UI(scene, camera, physics);
 	
 	const renderer = new THREE.WebGLRenderer({ canvas });
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -69,12 +70,9 @@ Ammo().then(function(Ammo) {
 
 	// Camera Controls
 	const controls = new OrbitControls(camera, renderer.domElement);
-
-	// Initialize raycaster in UI
-	initializeRaycaster(raycaster, scene, camera);
 	
 	// UI function
-	setupUIHandlers();
+	raycaster.setupUIHandlers();
 
 	// Animation Loop
 	function animate() {
@@ -83,7 +81,7 @@ Ammo().then(function(Ammo) {
 		physics.simulate(deltaTime);
 		// Handle cloth translation
 		if (physicsInstance) {
-			handleClothTranslationFromTop(physicsInstance);
+			raycaster.handleClothTranslationFromTop(physicsInstance);
 		}
 		
 		renderer.render(scene, camera);
