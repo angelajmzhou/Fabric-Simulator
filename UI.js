@@ -13,32 +13,17 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.physics = physicsInstance;
   this.clippedPoints = [];
 }
+handleAnchorMovement(deltaTime, anchorMesh) {
+  const moveSpeed = 10.0; // Movement speed
 
-
-
-handleClothTranslationFromTop(physicsInstance) {
-  const translationSpeed = 0.1;
-
-  if (Input.isKeyDown('ArrowUp')) {
-      physicsInstance.translateClothFromTop(0, 0, -translationSpeed); // Move forward
-  }
-  if (Input.isKeyDown('ArrowDown')) {
-      physicsInstance.translateClothFromTop(0, 0, translationSpeed); // Move backward
-  }
-  if (Input.isKeyDown('ArrowLeft')) {
-      physicsInstance.translateClothFromTop(-translationSpeed, 0, 0); // Move left
-  }
-  if (Input.isKeyDown('ArrowRight')) {
-      physicsInstance.translateClothFromTop(translationSpeed, 0, 0); // Move right
-  }
-  if (Input.isKeyDown('t')) {
-      physicsInstance.translateClothFromTop(0, translationSpeed, 0); // Move up
-  }
-  if (Input.isKeyDown('g')) {
-      physicsInstance.translateClothFromTop(0, -translationSpeed, 0); // Move down
-  }
+  // Calculate movement based on input state
+  if (Input.isKeyDown('ArrowUp')) anchorMesh.position.y += moveSpeed * deltaTime;
+  if (Input.isKeyDown('ArrowDown')) anchorMesh.position.y -= moveSpeed * deltaTime;
+  if (Input.isKeyDown('ArrowLeft')) anchorMesh.position.x -= moveSpeed * deltaTime;
+  if (Input.isKeyDown('ArrowRight')) anchorMesh.position.x += moveSpeed * deltaTime;
+  if (Input.isKeyDown('g')) anchorMesh.position.z += moveSpeed * deltaTime;
+  if (Input.isKeyDown('t')) anchorMesh.position.z -= moveSpeed * deltaTime;
 }
-
 
 // Step 1: Get the current mouse position in normalized device coordinates (NDC)
 // Step 2: Update the raycaster to use the mouse position and camera

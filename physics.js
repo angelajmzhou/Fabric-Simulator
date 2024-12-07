@@ -95,18 +95,18 @@ addModel(fbx_model) {
 * @param {Ammo.mesh} mesh mesh of model
 */
 addObject(threeObj, shape, origin, mesh) {
-    const transform = new this.Ammo.btTransform();
+    var transform = new this.Ammo.btTransform();
     transform.setIdentity();
     transform.setOrigin(origin);
-    const motionState = new this.Ammo.btDefaultMotionState(transform);
-    const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
-        0, //mass
+    var motionState = new this.Ammo.btDefaultMotionState(transform);
+    var rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
+        50, //mass
         motionState,
         shape,
         new this.Ammo.btVector3(0, 0, 0) //local inertia
     )
-    
-    const rigidBody = new this.Ammo.btRigidBody(rbInfo);
+
+    var rigidBody = new this.Ammo.btRigidBody(rbInfo);
     threeObj.userData.physicsBody = rigidBody;
 
     rigidBody.getCollisionShape().setMargin(this.margin);
@@ -119,6 +119,32 @@ addObject(threeObj, shape, origin, mesh) {
 
     return rigidBody;
 }
+addCornerAnchor(threeObj, shape, origin, mesh) {
+  var transform = new this.Ammo.btTransform();
+  transform.setIdentity();
+  transform.setOrigin(origin);
+  var motionState = new this.Ammo.btDefaultMotionState(transform);
+  var rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
+      0, //mass
+      motionState,
+      shape,
+      new this.Ammo.btVector3(0, 0, 0) //local inertia
+  )
+
+  var rigidBody = new this.Ammo.btRigidBody(rbInfo);
+  threeObj.userData.physicsBody = rigidBody;
+
+  rigidBody.getCollisionShape().setMargin(this.margin);
+
+  this.physicsWorld.addRigidBody(rigidBody, 1, -1);
+
+  rigidBody.setActivationState(4); // Disable deactivation
+
+  this.objects.push({physicsBody: rigidBody, mesh: mesh}); 
+
+  return rigidBody;
+}
+
 /**
 * Calculate transform of a loaded model
 * @param {THREE.Group} fbx_model instance of a loaded FBX model
@@ -373,35 +399,6 @@ createCloth(
         });
     }
 
-    translateClothFromTop(offsetX, offsetY, offsetZ) {
-      if (this.softbodies.length === 0) {
-          console.error("No soft body found to translate.");
-          return;
-      }
-  
-      const cloth = this.softbodies[0]; // Access the first soft body
-  
-      // Get the nodes of the soft body
-      const nodes = cloth.userData.physicsBody.get_m_nodes();
-      const numSegmentsX = Math.sqrt(nodes.size()); // Assume grid is square for simplicity
-  
-      // Move the top row of nodes
-      for (let i = 0; i < numSegmentsX; i++) {
-          const node = nodes.at(i); // Top row nodes are the first N nodes
-          const pos = node.get_m_x();
-          pos.setX(pos.x() + offsetX);
-          pos.setY(pos.y() + offsetY);
-          pos.setZ(pos.z() + offsetZ);
-          node.set_m_x(pos);
-      }
-  
-      // Update the Three.js mesh position to reflect the soft body
-      cloth.position.x += offsetX;
-      cloth.position.y += offsetY;
-      cloth.position.z += offsetZ;
-  }
-  
-
     clothUpdate(cloth) {
         var clothSoftBody = cloth.userData.physicsBody;
         var geometry = cloth.geometry;
@@ -462,8 +459,7 @@ createCloth(
       return closestIndex;
 }
 
-    
-    simulate(deltaTime) {
+    simulate(deltaTime, anchorMesh) {
         // Step the physics simulation forward
         //let dt = Math.min(deltaTime, 1 / 30); // Cap deltaTime to ~33ms
         this.physicsWorld.stepSimulation(1/60, 5);
@@ -472,6 +468,16 @@ createCloth(
         this.softbodies.forEach((cloth) => {
             this.clothUpdate(cloth);
         });
+        
+        // Sync anchor mesh with the physics body
+        const anchorPhysicsBody = anchorMesh.userData.physicsBody;
+
+        if (anchorPhysicsBody) {
+          this.transformAux1.setIdentity();
+          this.transformAux1.setOrigin(new this.Ammo.btVector3(anchorMesh.position.x, anchorMesh.position.y, anchorMesh.position.z));
+          anchorPhysicsBody.setWorldTransform(this.transformAux1);
+
+        }
     }    
 }
 export default Physics
