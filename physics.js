@@ -6,8 +6,9 @@ import * as THREE from 'three';
  * 
  */
 class Physics {
-    constructor(Ammo) {
+    constructor(Ammo, scene) {
         this.Ammo = Ammo;
+        this.scene = scene;
         this.objects = []; // Track objects added to the physics world
         this.softbodies = []; // Track objects added to the physics world
 
@@ -55,9 +56,14 @@ class Physics {
 * @param {THREE.Group} fbx_model instance of a loaded FBX model
 */
 addModel(fbx_model) {
-		const mesh = fbx_model.children[0]; // Access the mesh
-    const meshShape = this.createTriangleMeshCollisionShape(mesh);
+    fbx_model.updateMatrixWorld(true);
+		const mesh = fbx_model.children[0] // Access the mesh
+    const meshShape = this.createWireframeAndMesh(mesh, fbx_model);
     const transform = this.getTransform(fbx_model);
+
+    const rotation = new Ammo.btQuaternion();
+    rotation.setEulerZYX(Math.PI / 2, 0, 0); // Roll: 90 degrees
+    transform.setRotation(rotation); // Adjust rotation in Ammo.js
     const motionState = new this.Ammo.btDefaultMotionState(transform);
     const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
         0, //mass
@@ -66,13 +72,13 @@ addModel(fbx_model) {
         new this.Ammo.btVector3(0, 0, 0) //local inertia
     )
     const rigidBody = new this.Ammo.btRigidBody(rbInfo);
-    rigidBody.getCollisionShape().setMargin(this.margin);
 
     this.physicsWorld.addRigidBody(rigidBody, 1, -1);
 
     mesh.userData.physicsBody = rigidBody;
-
+    rigidBody.setWorldTransform(transform);
     rigidBody.setActivationState(4); // Disable deactivation
+    rigidBody.activate();
 
     this.objects.push({physicsBody: rigidBody, mesh: fbx_model}); 
 
@@ -97,8 +103,8 @@ addObject(threeObj, shape, origin, mesh) {
         shape,
         new this.Ammo.btVector3(0, 0, 0) //local inertia
     )
+    
     const rigidBody = new this.Ammo.btRigidBody(rbInfo);
-
     threeObj.userData.physicsBody = rigidBody;
 
     rigidBody.getCollisionShape().setMargin(this.margin);
@@ -118,13 +124,16 @@ addObject(threeObj, shape, origin, mesh) {
 getTransform(fbx_model){
     const position = fbx_model.position;
     const quaternion = fbx_model.quaternion;
-
+    console.log(quaternion)
     const transform = new this.Ammo.btTransform();
     transform.setIdentity();
     const origin = new this.Ammo.btVector3(position.x, position.y, position.z);
     transform.setOrigin(origin);
     const rotation = new this.Ammo.btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
     transform.setRotation(rotation);
+    console.log("Ammo Quaternion:", rotation.x(), rotation.y(), rotation.z(), rotation.w());
+    console.log("Three.js Quaternion:", quaternion);
+
 
     return transform;
 }
@@ -132,15 +141,33 @@ getTransform(fbx_model){
  * Loads a collision shape for a static mannequin
  * @param {THREE.Mesh} mesh Instance of a loaded FBX model
  */
-createTriangleMeshCollisionShape(mesh) {
+
+/**
+ * Loads a collision shape for a static mannequin
+ * @param {THREE.Mesh} mesh Instance of a loaded FBX model
+ */
+createTriangleMeshCollisionShape(mesh, fbx_model) {
+  //geometry.computeBoundingBox();
+  fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
+  fbx_model.updateMatrixWorld(true); // Update world matrix
+  mesh.geometry.applyMatrix4(fbx_model.matrixWorld); // Apply the transformation
+  mesh.geometry.scale(0.01, 0.01, 0.01); // Reapply the intended scale directly to geometry
   const geometry = mesh.geometry;
+  const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
+   this.scene.add(boxHelper);
+
+   const axesHelper = new THREE.AxesHelper(1);
+   fbx_model.add(axesHelper);
+
+
+  const scale = 1;
   const meshShape = new Ammo.btTriangleMesh(true, true);
   const vertices = geometry.attributes.position.array;
   for (let i = 0; i < vertices.length; i += 9) {
     meshShape.addTriangle(
-      new Ammo.btVector3(vertices[i], vertices[i + 1], vertices[i + 2]),
-      new Ammo.btVector3(vertices[i + 3], vertices[i + 4], vertices[i + 5]),
-      new Ammo.btVector3(vertices[i + 6], vertices[i + 7], vertices[i + 8]),
+      new Ammo.btVector3(vertices[i] * scale, vertices[i + 1] * scale, vertices[i + 2] * scale),
+      new Ammo.btVector3(vertices[i + 3] * scale, vertices[i + 4] * scale, vertices[i + 5] * scale),
+      new Ammo.btVector3(vertices[i + 6] * scale, vertices[i + 7] * scale, vertices[i + 8] * scale),
       true
     );
   }  
@@ -150,6 +177,81 @@ createTriangleMeshCollisionShape(mesh) {
     return shape;
     }
 
+  createWireframeAndMesh(mesh, fbx_model) {
+    fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
+    fbx_model.updateMatrixWorld(true); // Ensure the world matrix is up to date
+    mesh.geometry.applyMatrix4(fbx_model.matrixWorld); // Apply all transformations to the geometry
+    mesh.geometry.computeBoundingBox(); // Update bounding box
+    mesh.geometry.computeBoundingSphere(); // Update bounding sphere
+
+    // Reset the model's transformations
+    fbx_model.position.set(0, 0, 0);
+    fbx_model.rotation.set(0, 0, 0);
+
+    mesh.geometry.scale(0.001, 0.001, 0.001); // Reapply the intended scale directly to geometry
+    const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
+     this.scene.add(boxHelper);
+     console.log("FBX Model Rotation:", fbx_model.rotation);
+     console.log("FBX Model MatrixWorld:", fbx_model.matrixWorld);
+     
+     const axesHelper = new THREE.AxesHelper(1);
+     fbx_model.add(axesHelper);
+    const geometry = mesh.geometry;
+    const scale = 500; // Same scale applied to the collision shape
+    const meshShape = new Ammo.btTriangleMesh(true, true);
+    const vertices = geometry.attributes.position.array;
+
+    // For wireframe visualization
+    const linePositions = [];
+
+    for (let i = 0; i < vertices.length; i += 9) {
+      // Each triangle's vertices
+      const v0 = new Ammo.btVector3(vertices[i] * scale, vertices[i + 1] * scale, vertices[i + 2] * scale);
+      const v1 = new Ammo.btVector3(vertices[i + 3] * scale, vertices[i + 4] * scale, vertices[i + 5] * scale);
+      const v2 = new Ammo.btVector3(vertices[i + 6] * scale, vertices[i + 7] * scale, vertices[i + 8] * scale);
+
+      // Add triangle to Ammo mesh
+      meshShape.addTriangle(v0, v1, v2, true);
+
+      // For visualization: Push edges for Three.js line segments
+      linePositions.push(
+        v0.x(), v0.y(), v0.z(),
+        v1.x(), v1.y(), v1.z(),
+        v1.x(), v1.y(), v1.z(),
+        v2.x(), v2.y(), v2.z(),
+        v2.x(), v2.y(), v2.z(),
+        v0.x(), v0.y(), v0.z()
+      );
+
+      // Free memory in Ammo.js
+      Ammo.destroy(v0);
+      Ammo.destroy(v1);
+      Ammo.destroy(v2);
+    }
+
+    // Create the collision shape
+    const shape = new Ammo.btBvhTriangleMeshShape(meshShape, true, true);
+    shape.setMargin(0.01); // Reduce the collision margin
+    console.log("Wireframe vertices:", linePositions.slice(0, 30)); // Log first 10 vertices
+    console.log("Baked geometry bounding box:", mesh.geometry.boundingBox);
+
+    // Visualization: Create a Three.js wireframe
+    const lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+    const collisionWireframe = new THREE.LineSegments(lineGeometry, lineMaterial);
+
+    // Position and scale the wireframe to match the mesh
+    //collisionWireframe.scale.set(1 / scale, 1 / scale, 1 / scale); // Undo scale factor
+    collisionWireframe.position.copy(mesh.position); // Match position
+    collisionWireframe.quaternion.copy(mesh.quaternion); // Match rotation
+
+    // Add the wireframe to the scene
+    this.scene.add(collisionWireframe);
+
+    console.log("Collision shape and wireframe created:", meshShape.constructor.name);
+    return shape;
+  }
 
     /**
      * @param {number} clothWidth Width of the cloth
@@ -225,8 +327,12 @@ createTriangleMeshCollisionShape(mesh) {
       
         // Soft body configuration
         const sbConfig = clothSoftBody.get_m_cfg();
-        sbConfig.set_viterations(10);
-        sbConfig.set_piterations(10);
+        sbConfig.set_viterations(20); // Increase velocity solver iterations
+        sbConfig.set_piterations(20); // Increase position solver iterations
+        sbConfig.set_kDP(0.01);       // Add damping to reduce jitter
+        sbConfig.set_kDG(0.01);       // Add drag to stabilize movement
+        sbConfig.set_kLF(0.01);       // Add lift to prevent excessive crumpling
+
 
         clothSoftBody.setTotalMass(0.9, false);
       
@@ -272,10 +378,10 @@ createTriangleMeshCollisionShape(mesh) {
           return;
       }
   
-      const { physicsBody: clothSoftBody, mesh: cloth } = this.softbodies[0]; // Access the first soft body
+      const cloth = this.softbodies[0]; // Access the first soft body
   
       // Get the nodes of the soft body
-      const nodes = clothSoftBody.get_m_nodes();
+      const nodes = cloth.userData.physicsBody.get_m_nodes();
       const numSegmentsX = Math.sqrt(nodes.size()); // Assume grid is square for simplicity
   
       // Move the top row of nodes

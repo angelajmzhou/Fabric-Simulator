@@ -14,17 +14,13 @@ const scene = new THREE.Scene();
 
 const clock = new THREE.Clock();
 Ammo().then(function(Ammo) {
-  	const physics = new Physics(Ammo);
+  	const physics = new Physics(Ammo, scene);
 	console.log('Physics world initialized');
 
 	physicsInstance = physics; 
 	const clothe = physics.createCloth(); // Create the cloth
     scene.add(clothe); // Add the cloth to the scene
-  	// Now create the soft body
-  	//const cloth = new softBody(Ammo, physics);
 
-  	// Access the cloth mesh and add it to the scene
-  	//scene.add(cloth.get());
 
 	// Raycaster stuff
 	const raycaster = new THREE.Raycaster();
@@ -44,8 +40,10 @@ Ammo().then(function(Ammo) {
 	const loader = new FBXLoader();
 	let mannequin;
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
-	  fbx.scale.set(0.001, 0.001, 0.001);
+	  console.log("Mannequin scale:", fbx.scale);
+	  console.log("Mannequin position:", fbx.position);
 	  physics.addModel(fbx);
+	  fbx.frustumCulled = false;
 	  scene.add(fbx);
 	});
 
@@ -63,7 +61,7 @@ Ammo().then(function(Ammo) {
 	
 	let cloth = physics.createCloth();
 	physics.changeClothTexture(cloth);
-
+	cloth.frustumCulled = false;
 	cloth.castShadow = true;
 	cloth.receiveShadow = true;
 	scene.add(cloth);
