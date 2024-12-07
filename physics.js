@@ -39,7 +39,7 @@ class Physics {
             this.collisionConfiguration,
             this.softBodySolver
         );
-        this.physicsWorld.getSolverInfo().set_m_numIterations(20); // Increase iterations for better stability
+        this.physicsWorld.getSolverInfo().set_m_numIterations(100); // Increase iterations for better stability
 
 
         // Create the world info for the soft bodies
@@ -100,7 +100,7 @@ addObject(threeObj, shape, origin, mesh) {
     transform.setOrigin(origin);
     var motionState = new this.Ammo.btDefaultMotionState(transform);
     var rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
-        50, //mass
+        0, //mass
         motionState,
         shape,
         new this.Ammo.btVector3(0, 0, 0) //local inertia
@@ -358,10 +358,18 @@ createCloth(
 
   // Soft body configuration
   const sbConfig = clothSoftBody.get_m_cfg();
-  sbConfig.set_viterations(50); // Increase velocity solver iterations
-  sbConfig.set_piterations(50); // Increase position solver iterations
+  sbConfig.set_viterations(100); // Increase velocity solver iterations
+  sbConfig.set_piterations(100); // Increase position solver iterations
+  sbConfig.set_kDP(0.03); // Set damping
+  sbConfig.set_kCHR(5.0);
+  sbConfig.set_kDF(0.9);
 
-  clothSoftBody.setTotalMass(0.9, false);
+  // Stiffness
+  clothSoftBody.get_m_materials().at(0).set_m_kLST(0.3);
+  clothSoftBody.get_m_materials().at(0).set_m_kAST(0.3);
+
+
+  clothSoftBody.setTotalMass(3.0, false);
 
   Ammo.castObject(clothSoftBody, Ammo.btCollisionObject)
       .getCollisionShape()

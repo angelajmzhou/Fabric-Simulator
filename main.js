@@ -37,7 +37,6 @@ Ammo().then(function(Ammo) {
 	
 	// Load Mannequin
 	const loader = new FBXLoader();
-	let mannequin;
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 	  console.log("Mannequin scale:", fbx.scale);
 	  console.log("Mannequin position:", fbx.position);
@@ -69,24 +68,24 @@ Ammo().then(function(Ammo) {
 	if (!cloth.userData.physicsBody) {
 		console.error("Cloth does not have a physics body.");
 		return null;
-	  }
-	
-	  const nodes = cloth.userData.physicsBody.get_m_nodes();
-	  const targetNode = nodes.at(0);
-	
-	  if (!targetNode) {
-		console.error("No node found at index.");
-		return null;
-	  }
+	}
+	const nodes = cloth.userData.physicsBody.get_m_nodes();
+	const targetNode = nodes.at(0);
+
+	if (!targetNode) {
+	console.error("No node found at index.");
+	return null;
+	}
 	
 	// add cloth corner anchor
 	const position = targetNode.get_m_x(); // Get the position of the corner node
 	const anchorOrigin = new Ammo.btVector3(position.x(), position.y(), position.z());
 	const anchorShape = new Ammo.btBoxShape(new Ammo.btVector3(0.1, 0.1, 0.1));
-	const anchorGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-	const anchorMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
+	const anchorGeometry = new THREE.SphereGeometry(0.5, 16, 16);
+	const anchorMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
 	const anchorMesh = new THREE.Mesh(anchorGeometry, anchorMaterial);
 	anchorMesh.position.set(position.x(), position.y(), position.z());
+	anchorMesh.castShadow = true;
 	anchorMesh.receiveShadow = true;
 	anchorMesh.frustumCulled = false;
 	const anchor = physics.addCornerAnchor(anchorMesh, anchorShape, anchorOrigin, anchorMesh);
@@ -96,33 +95,22 @@ Ammo().then(function(Ammo) {
 	cloth.userData.physicsBody.appendAnchor(0, anchorMesh.userData.physicsBody, false, 1.0);
 	physics.anchorRigidBody = anchor;
 
-	const markerGeometry = new THREE.SphereGeometry(0.5, 16, 16); // Small sphere to mark the anchor
-	const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Red color
-	const markerMesh = new THREE.Mesh(markerGeometry, markerMaterial);
-
-	// Set its position to match the anchor's position
-	markerMesh.position.copy(anchorMesh.position);
-	scene.add(markerMesh);
-
-
 	// Camera Controls
 	const controls = new OrbitControls(camera, renderer.domElement);
 	
 	// UI function
 	raycaster.setupUIHandlers();
+	raycaster.setupMouseHandlers(anchorMesh);
 
 	// Animation Loop
 	function animate() {
 		requestAnimationFrame(animate);
 		const deltaTime = clock.getDelta();
-	  
 		// Handle movement of the corner anchor
 		if (anchorMesh && physics) {
 		  raycaster.handleAnchorMovement(deltaTime, anchorMesh);
 		}
 		physics.simulate(deltaTime, anchorMesh);
-		console.log("Anchor position:", anchorMesh.position);
-		markerMesh.position.copy(anchorMesh.position);
 		renderer.render(scene, camera);
 	  }
 	  animate();

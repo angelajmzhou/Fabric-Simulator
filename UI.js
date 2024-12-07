@@ -12,9 +12,17 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.camera = cameraInstance;
   this.physics = physicsInstance;
   this.clippedPoints = [];
+  this.isDragging = false; // Track if the user is dragging
+  this.anchorClicked = false; // Track if the anchor is clicked
+  this.mouse = new THREE.Vector2(); // Normalized device coordinates
+  this.anchorMesh = null; // Reference to the anchor mesh
 }
 handleAnchorMovement(deltaTime, anchorMesh) {
-  const moveSpeed = 10.0; // Movement speed
+  const moveSpeed = 5.0; // Movement speed
+
+  // const sensitivity = 0.1; // Mouse sensitivity
+  // anchorMesh.position.x += Input.getMouseDx * sensitivity;
+  // anchorMesh.position.y -= Input.getMouseDy * sensitivity;
 
   // Calculate movement based on input state
   if (Input.isKeyDown('ArrowUp')) anchorMesh.position.y += moveSpeed * deltaTime;
@@ -23,6 +31,30 @@ handleAnchorMovement(deltaTime, anchorMesh) {
   if (Input.isKeyDown('ArrowRight')) anchorMesh.position.x += moveSpeed * deltaTime;
   if (Input.isKeyDown('g')) anchorMesh.position.z += moveSpeed * deltaTime;
   if (Input.isKeyDown('t')) anchorMesh.position.z -= moveSpeed * deltaTime;
+}
+
+// Handle anchor dragging
+handleAnchorDrag(event, anchorMesh) {
+  // Convert mouse position to normalized device coordinates (NDC)
+  const mouse = new THREE.Vector2();
+  mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
+  mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1; 
+
+  // Update raycaster
+  this.raycaster.setFromCamera(mouse, this.camera);
+
+  // Define the movement plane (e.g., XY plane with Z fixed)
+  const movementPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -anchorMesh.position.z);
+  const intersection = new THREE.Vector3();
+
+  // Check for intersection with the plane
+  if (this.raycaster.ray.intersectPlane(movementPlane, intersection)) {
+    // Directly set the position to the intersection point without lerping
+    anchorMesh.position.copy(intersection);
+    console.log('Anchor position updated to:', anchorMesh.position);
+  } else {
+    console.log('No intersection with movement plane.');
+  }
 }
 
 // Step 1: Get the current mouse position in normalized device coordinates (NDC)
@@ -84,6 +116,35 @@ clearClippedPoints() {
   showClippedPoints();
 }
 
+// Check if the mouse click is on the anchor
+checkMouseClickOnAnchor(event, anchorMesh) {
+  const mouse = new THREE.Vector2();
+  mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
+  mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;  
+
+  // Set up the raycaster using the mouse click location
+  this.raycaster.setFromCamera(mouse, this.camera);
+
+  // Perform intersection test with the anchor
+  const intersects = this.raycaster.intersectObject(anchorMesh, true);
+
+  if (intersects.length > 0) {
+    if (this.isDragging) {
+      // If dragging is already active, stop it
+      this.isDragging = false;
+      console.log('Dragging deactivated!');
+    } else {
+      // If dragging isn't active, start it
+      this.isDragging = true;
+      console.log('Dragging activated!');
+    }
+  } else {
+    console.log('No valid intersection');
+  }
+}
+
+
+
 // Setup event handlers for UI interactions
 setupUIHandlers() {
   const SButton = document.getElementById("clipToModel");
@@ -126,5 +187,25 @@ setupUIHandlers() {
     }
   });
 }
+  setupMouseHandlers(anchorMesh) {
+    if (!this.raycaster || !this.camera || !this.scene) {
+      console.log('Raycaster, camera, or scene not initialized!');
+      return;
+    }
+  
+    // Mouse state flags
+    this.isDragging = false;
+  
+    // Add event listeners
+    window.addEventListener('mousedown', (event) => {
+      this.checkMouseClickOnAnchor(event, anchorMesh);
+    });
+  
+    window.addEventListener('mousemove', (event) => {
+      if (this.isDragging) {
+        this.handleAnchorDrag(event, anchorMesh);
+      }
+    });
+  }
 }
 export default UI
