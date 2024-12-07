@@ -18,8 +18,6 @@ Ammo().then(function(Ammo) {
 	console.log('Physics world initialized');
 
 	physicsInstance = physics; 
-	const clothe = physics.createCloth(); // Create the cloth
-    scene.add(clothe); // Add the cloth to the scene
 
 
 	const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
