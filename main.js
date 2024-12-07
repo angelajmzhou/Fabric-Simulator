@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
+import UI from './UI.js';
 import softBody from './softbody.js';
-import { setupUIHandlers, initializeRaycaster, handleClothTranslationFromTop  } from'./UI.js'
+import { setupUIHandlers, initializeRaycaster, handleClothTranslationFromTop  , clipPointToModel} from'./UI.js'
 
 // Get the canvas element
 const canvas = document.getElementById('canvas');
@@ -23,7 +24,7 @@ Ammo().then(function(Ammo) {
 
 
 	// Raycaster stuff
-	const raycaster = new THREE.Raycaster();
+	const raycaster = UI(scene, camera, physics);
 	const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
 	camera.position.set(0, 20, 50);
 	

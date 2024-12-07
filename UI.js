@@ -1,25 +1,22 @@
 import Input from './input.js';
 import * as THREE from 'three';
 
-let clippedPoints = [];
-let raycaster;
-let camera;
-let scene;
-
+class UI{
 // Initialize raycaster
-export function initializeRaycaster(raycasterInstance, sceneInstance, cameraInstance) {
+constructor(sceneInstance, cameraInstance, physicsInstance) {
   // mouse position in 3D
-  raycaster = raycasterInstance;
+  this.raycaster = new THREE.Raycaster();
   // objects be in this scene
-  scene = sceneInstance;
+  this.scene = sceneInstance;
   // camera for converting screen space to world space
-  camera = cameraInstance;
+  this.camera = cameraInstance;
+  this.physics = physicsInstance;
+  this.clippedPoints = [];
 }
 
 
-const translationSpeed = 0.1; // Adjust speed as necessary
 
-export function handleClothTranslationFromTop(physicsInstance) {
+handleClothTranslationFromTop(physicsInstance) {
   const translationSpeed = 0.1;
 
   if (Input.isKeyDown('ArrowUp')) {
@@ -47,7 +44,7 @@ export function handleClothTranslationFromTop(physicsInstance) {
 // Step 2: Update the raycaster to use the mouse position and camera
 // Step 3: Check for intersections with objects in the scene
 // Step 4: If an intersection is found, use the closest point
-function clipPointToModel() {
+clipPointToModel() {
   
   if (!raycaster || !camera || !scene) {
     console.log('Raycaster or scene/camera not initialized!');
@@ -89,21 +86,21 @@ function clipPointToModel() {
   }
 }
 
-function showClippedPoints() {
+showClippedPoints() {
   console.log('Showing all clipped points:');
   clippedPoints.forEach((point, index) => {
     console.log(`Point ${index + 1}:`, point);
   });
 }
 
-function clearClippedPoints() {
+clearClippedPoints() {
   console.log('Clearing all clipped points...');
   clippedPoints = [];
   showClippedPoints();
 }
 
 // Setup event handlers for UI interactions
-export function setupUIHandlers() {
+setupUIHandlers() {
   const SButton = document.getElementById("clipToModel");
   const AButton = document.getElementById("drawmodePoints");
   const LButton = document.getElementById("RemovePoints");
@@ -143,4 +140,5 @@ export function setupUIHandlers() {
       LButton.classList.remove('active-button');
     }
   });
+}
 }

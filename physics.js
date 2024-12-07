@@ -232,8 +232,6 @@ createTriangleMeshCollisionShape(mesh, fbx_model) {
     // Create the collision shape
     const shape = new Ammo.btBvhTriangleMeshShape(meshShape, true, true);
     shape.setMargin(0.01); // Reduce the collision margin
-    console.log("Wireframe vertices:", linePositions.slice(0, 30)); // Log first 10 vertices
-    console.log("Baked geometry bounding box:", mesh.geometry.boundingBox);
 
     // Visualization: Create a Three.js wireframe
     const lineGeometry = new THREE.BufferGeometry();
@@ -439,7 +437,29 @@ createCloth(
         geometry.attributes.normal.needsUpdate = true;
       }
       
-      
+      // Find the closest vertex index on the cloth
+    findClosestVertex(geometry, targetPosition) {
+      const vertices = geometry.attributes.position.array;
+      let closestIndex = -1;
+      let closestDistance = Infinity;
+
+      for (let i = 0; i < vertices.length / 3; i++) {
+          const vertexPosition = new THREE.Vector3(
+              vertices[i * 3],
+              vertices[i * 3 + 1],
+              vertices[i * 3 + 2]
+          );
+          const distance = vertexPosition.distanceTo(targetPosition);
+
+          if (distance < closestDistance) {
+              closestDistance = distance;
+              closestIndex = i;
+          }
+      }
+
+      return closestIndex;
+}
+
     
     simulate(deltaTime) {
         // Step the physics simulation forward
