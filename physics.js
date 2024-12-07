@@ -360,6 +360,7 @@ createCloth(
   const sbConfig = clothSoftBody.get_m_cfg();
   sbConfig.set_viterations(50); // Increase velocity solver iterations
   sbConfig.set_piterations(50); // Increase position solver iterations
+  sbConfig.set_kDP(0.1); // Damping to reduce stretching
 
   clothSoftBody.setTotalMass(0.9, false);
 
