@@ -25,7 +25,7 @@ Ammo().then(function(Ammo) {
 	// Raycaster stuff
 	const raycaster = new THREE.Raycaster();
 	const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
-	camera.position.set(0, 2, 5);
+	camera.position.set(0, 20, 50);
 	
 	const renderer = new THREE.WebGLRenderer({ canvas });
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -47,11 +47,11 @@ Ammo().then(function(Ammo) {
 	  scene.add(fbx);
 	});
 
-	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(2.5, 0.5, 2.5));
+	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(10, 0.5, 10));
 	const origin = new Ammo.btVector3(0,-1,0);
 
 	// Three.js floor mesh setup
-	const floorGeometry = new THREE.BoxGeometry(5, 1, 5);
+	const floorGeometry = new THREE.BoxGeometry(20, 1, 20);
 	const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x808080 });
 	const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
 	floorMesh.position.y -= 0.45;

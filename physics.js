@@ -62,7 +62,7 @@ addModel(fbx_model) {
     const transform = this.getTransform(fbx_model);
 
     const rotation = new Ammo.btQuaternion();
-    rotation.setEulerZYX(Math.PI / 2, 0, 0); // Roll: 90 degrees
+    rotation.setEulerZYX(0, 0, -Math.PI/2); // Roll: 90 degrees
     transform.setRotation(rotation); // Adjust rotation in Ammo.js
     const motionState = new this.Ammo.btDefaultMotionState(transform);
     const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
@@ -188,7 +188,7 @@ createTriangleMeshCollisionShape(mesh, fbx_model) {
     fbx_model.position.set(0, 0, 0);
     fbx_model.rotation.set(0, 0, 0);
 
-    mesh.geometry.scale(0.001, 0.001, 0.001); // Reapply the intended scale directly to geometry
+    mesh.geometry.scale(0.01, 0.01, 0.01); // Reapply the intended scale directly to geometry
     const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
      this.scene.add(boxHelper);
      console.log("FBX Model Rotation:", fbx_model.rotation);
@@ -197,7 +197,7 @@ createTriangleMeshCollisionShape(mesh, fbx_model) {
      const axesHelper = new THREE.AxesHelper(1);
      fbx_model.add(axesHelper);
     const geometry = mesh.geometry;
-    const scale = 500; // Same scale applied to the collision shape
+    const scale =100; // Same scale applied to the collision shape
     const meshShape = new Ammo.btTriangleMesh(true, true);
     const vertices = geometry.attributes.position.array;
 
@@ -259,105 +259,106 @@ createTriangleMeshCollisionShape(mesh, fbx_model) {
      * @param {THREE.Vector3} clothPos Position of the cloth in world space
      * @param {number} margin Collision margin for the soft body
      */
-    createCloth(
-        clothWidth = 4,
-        clothHeight = 3,
-        clothPos = new THREE.Vector3(0, 6, 2),
-        margin = 0.5
-      ) {
-        const clothNumSegmentsZ = clothWidth * 5;
-        const clothNumSegmentsY = clothHeight * 5;
-      
-        // Create Three.js geometry using PlaneGeometry
-        
-        const clothGeometry = new THREE.PlaneGeometry(
-          clothWidth,
-          clothHeight,
-          clothNumSegmentsZ,
-          clothNumSegmentsY
-        );
-        clothGeometry.rotateY(Math.PI * 0.5);
-        clothGeometry.translate(
-          clothPos.x,
-          clothPos.y + clothHeight * 0.5,
-          clothPos.z - clothWidth * 0.5
-        );
-      
-        const clothMaterial = new THREE.MeshLambertMaterial({
-          color: 0xffffff,
-          side: THREE.DoubleSide,
-          //wireframe: true
-        });
-        const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
-      
-        // Define Ammo.js cloth corners
-        const clothCorner00 = new this.Ammo.btVector3(
-          clothPos.x,
-          clothPos.y + clothHeight,
-          clothPos.z
-        );
-        const clothCorner01 = new this.Ammo.btVector3(
-          clothPos.x,
-          clothPos.y + clothHeight,
-          clothPos.z - clothWidth
-        );
-        const clothCorner10 = new this.Ammo.btVector3(
-          clothPos.x,
-          clothPos.y,
-          clothPos.z
-        );
-        const clothCorner11 = new this.Ammo.btVector3(
-          clothPos.x,
-          clothPos.y,
-          clothPos.z - clothWidth
-        );
-      
-        // Create the soft body
-        const clothSoftBody = this.softBodyHelper.CreatePatch(
-          this.worldInfo,
-          clothCorner00,
-          clothCorner01,
-          clothCorner10,
-          clothCorner11,
-          clothNumSegmentsZ + 1,
-          clothNumSegmentsY + 1,
-          0, // Fixed corners
-          true // Generate diagonal links
-        );
-      
-        // Soft body configuration
-        const sbConfig = clothSoftBody.get_m_cfg();
-        sbConfig.set_viterations(20); // Increase velocity solver iterations
-        sbConfig.set_piterations(20); // Increase position solver iterations
-        sbConfig.set_kDP(0.01);       // Add damping to reduce jitter
-        sbConfig.set_kDG(0.01);       // Add drag to stabilize movement
-        sbConfig.set_kLF(0.01);       // Add lift to prevent excessive crumpling
+    /**
+ * @param {number} clothWidth Width of the cloth
+ * @param {number} clothHeight Height of the cloth
+ * @param {THREE.Vector3} clothPos Position of the cloth in world space
+ * @param {number} margin Collision margin for the soft body
+ */
+createCloth(
+  clothWidth = 20,
+  clothHeight = 20,
+  clothPos = new THREE.Vector3(0, 50, 0),
+  margin = 0.5
+) {
+  const clothNumSegmentsZ = clothWidth;
+  const clothNumSegmentsY = clothHeight;
 
+  // Create Three.js geometry using PlaneGeometry
+  const clothGeometry = new THREE.PlaneGeometry(
+      clothWidth,
+      clothHeight,
+      clothNumSegmentsZ,
+      clothNumSegmentsY
+  );
+  clothGeometry.rotateX(-Math.PI * 0.5);
+  clothGeometry.translate(
+      clothPos.x,
+      clothPos.y,
+      clothPos.z
+  );
 
-        clothSoftBody.setTotalMass(0.9, false);
-      
-        Ammo.castObject(clothSoftBody, Ammo.btCollisionObject)
-          .getCollisionShape()
-          .setMargin(margin); // Adjust margin as per the working example
-      
-        this.physicsWorld.addSoftBody(clothSoftBody, 1, -1);
-      
-        // Link physics body to Three.js mesh
-        cloth.userData.physicsBody = clothSoftBody;
-      
-        // Disable deactivation
-        clothSoftBody.setActivationState(4);
-      
-        this.softbodies.push(cloth);
-      
-        // Clean up Ammo.js objects
-        Ammo.destroy(clothCorner00);
-        Ammo.destroy(clothCorner01);
-        Ammo.destroy(clothCorner10);
-        Ammo.destroy(clothCorner11);
-      
-        return cloth;
-      }
+  const clothMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      // wireframe: true
+  });
+  const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
+
+  // Define Ammo.js cloth corners
+  const clothCorner00 = new this.Ammo.btVector3(
+      clothPos.x - clothWidth * 0.5,
+      clothPos.y,
+      clothPos.z + clothHeight * 0.5
+  );
+  const clothCorner01 = new this.Ammo.btVector3(
+      clothPos.x - clothWidth * 0.5,
+      clothPos.y,
+      clothPos.z - clothHeight * 0.5
+  );
+  const clothCorner10 = new this.Ammo.btVector3(
+      clothPos.x + clothWidth * 0.5,
+      clothPos.y,
+      clothPos.z + clothHeight * 0.5
+  );
+  const clothCorner11 = new this.Ammo.btVector3(
+      clothPos.x + clothWidth * 0.5,
+      clothPos.y,
+      clothPos.z - clothHeight * 0.5
+  );
+
+  // Create the soft body
+  const clothSoftBody = this.softBodyHelper.CreatePatch(
+      this.worldInfo,
+      clothCorner00,
+      clothCorner01,
+      clothCorner10,
+      clothCorner11,
+      clothNumSegmentsZ + 1,
+      clothNumSegmentsY + 1,
+      0, // Fixed corners
+      true // Generate diagonal links
+  );
+
+  // Soft body configuration
+  const sbConfig = clothSoftBody.get_m_cfg();
+  sbConfig.set_viterations(20); // Increase velocity solver iterations
+  sbConfig.set_piterations(20); // Increase position solver iterations
+
+  clothSoftBody.setTotalMass(0.9, false);
+
+  Ammo.castObject(clothSoftBody, Ammo.btCollisionObject)
+      .getCollisionShape()
+      .setMargin(margin); // Adjust margin as per the working example
+
+  this.physicsWorld.addSoftBody(clothSoftBody, 1, -1);
+
+  // Link physics body to Three.js mesh
+  cloth.userData.physicsBody = clothSoftBody;
+
+  // Disable deactivation
+  clothSoftBody.setActivationState(4);
+
+  this.softbodies.push(cloth);
+
+  // Clean up Ammo.js objects
+  Ammo.destroy(clothCorner00);
+  Ammo.destroy(clothCorner01);
+  Ammo.destroy(clothCorner10);
+  Ammo.destroy(clothCorner11);
+
+  return cloth;
+}
 
 
 
