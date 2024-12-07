@@ -39,6 +39,8 @@ class Physics {
             this.collisionConfiguration,
             this.softBodySolver
         );
+        this.physicsWorld.getSolverInfo().set_m_numIterations(20); // Increase iterations for better stability
+
 
         // Create the world info for the soft bodies
         this.worldInfo = this.physicsWorld.getWorldInfo();
@@ -330,8 +332,8 @@ createCloth(
 
   // Soft body configuration
   const sbConfig = clothSoftBody.get_m_cfg();
-  sbConfig.set_viterations(20); // Increase velocity solver iterations
-  sbConfig.set_piterations(20); // Increase position solver iterations
+  sbConfig.set_viterations(50); // Increase velocity solver iterations
+  sbConfig.set_piterations(50); // Increase position solver iterations
 
   clothSoftBody.setTotalMass(0.9, false);
 

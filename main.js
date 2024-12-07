@@ -3,7 +3,6 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
 import UI from './UI.js';
-import softBody from './softbody.js';
 //import { setupUIHandlers, initializeRaycaster, handleClothTranslationFromTop  , clipPointToModel} from'./UI.js'
 
 // Get the canvas element
