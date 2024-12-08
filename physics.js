@@ -68,7 +68,7 @@ addModel(mesh, scale, frame, pos) {
     transform.setOrigin(origin);
     const rotation = new this.Ammo.btQuaternion(0,0,0,1);
     //rotate to compensate for blender coordinates
-    rotation.setEulerZYX(0, 0, -Math.PI/2); 
+    //rotation.setEulerZYX(0, 0, Math.PI/2); 
     transform.setRotation(rotation); // Adjust rotation in Ammo.js
     const motionState = new this.Ammo.btDefaultMotionState(transform);
     const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
@@ -175,7 +175,7 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
        scale =1/factor; // Same scale applied to the collision shape
     }
     else{
-      scale = 1;
+      scale = 1/factor;
 
     }
     const meshShape = new Ammo.btTriangleMesh(true, true);

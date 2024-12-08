@@ -33,17 +33,21 @@ Ammo().then(function(Ammo) {
 	//renderer.setClearColor(0xA3A3A3);
 	
 	// Lighting
+	const ambientLight = new THREE.AmbientLight(0xffffff, 1); // White light with intensity of 1
+	scene.add(ambientLight);
+
 	const light = new THREE.DirectionalLight(0xffffff, 1);
 	light.position.set(5, 10, 7);
 	scene.add(light);
 	let mannequin;
 	// Load Mannequin
+	/*
 	const loader = new FBXLoader();
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 	  mannequin = fbx;
 	  console.log("Mannequin scale:", fbx.scale);
 	  console.log("Mannequin position:", fbx.position);
-	  physics.addModel(mannequin);
+	  physics.addModel(mannequin.children[0], 0.01, true, [0,0,0]);
 	  mannequin.frustumCulled = false;
 	  scene.add(mannequin);
 	  fbx.traverse((child) => {
@@ -58,14 +62,27 @@ Ammo().then(function(Ammo) {
         }
 	});
 	});
-
+	*/
 	const mtlLoader = new MTLLoader();
 	mtlLoader.load('birdman.mtl', (materials) => {
 		materials.preload(); 
 		const objLoader = new OBJLoader();
 		objLoader.setMaterials(materials); // Apply the loaded materials
 		objLoader.load('birdman.obj', (object) => {
+			object.frustumCulled = false;
+			const position = [0,11,0];
+			const axesHelper = new THREE.AxesHelper(5); // Size of 5 units
+			scene.add(axesHelper);
+
 			scene.add(object); // Add the object to the scene
+			object.traverse((child) => {
+				if (child instanceof THREE.Mesh) {
+					child.position.set(position[0], position[1], position[2]);
+					console.log("pos updated")
+					physics.addModel(child, 5, false, position); // Add each mesh to the physics world
+					mannequin = child;
+				}
+			});
 		});
 	});
 
@@ -126,7 +143,7 @@ Ammo().then(function(Ammo) {
 	// UI function
 	raycaster.setupUIHandlers();
 	console.log(physics.objects)
-	raycaster.setupMouseHandlers(anchorMesh, cloth, physics.objects[0], physics);
+	raycaster.setupMouseHandlers(anchorMesh, cloth, mannequin, physics);
 
 	// Animation Loop
 	function animate() {
@@ -135,6 +152,7 @@ Ammo().then(function(Ammo) {
 		// Handle movement of the corner anchor
 		if (anchorMesh && physics) {
 		  raycaster.handleAnchorMovement(deltaTime, anchorMesh);
+		  raycaster.setupMouseHandlers(anchorMesh, cloth, physics.objects[0], physics);
 		}
 		physics.simulate(deltaTime, anchorMesh);
 		renderer.render(scene, camera);
