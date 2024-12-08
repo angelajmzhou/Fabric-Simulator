@@ -103,6 +103,7 @@ handleClothDrag(event){
     if (!(cloth instanceof THREE.Mesh)) {
       console.error("Cloth is not a valid THREE.Mesh object!");
     }
+    
     cloth.geometry.computeBoundingBox();
 
     // Perform intersection test with the anchor
@@ -136,7 +137,7 @@ handleClothDrag(event){
   }
   checkMouseClickOnPin(event, physics) {
     const mouse = new THREE.Vector2();
-    var pin = null;
+    let pin = null;
     mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
     mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;  
     

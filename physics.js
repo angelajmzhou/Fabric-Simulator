@@ -56,15 +56,16 @@ class Physics {
 
 /**
 * Add a rigid body to the physics world.
-* @param {THREE.Group} fbx_model instance of a loaded FBX model
+* @param {THREE.mesh} mesh instance of a loaded mesh
 */
-addModel(fbx_model) {
-    fbx_model.updateMatrixWorld(true);
-		const mesh = fbx_model.children[0] // Access the mesh
-    const meshShape = this.createWireframeAndMesh(mesh, fbx_model);
-    const transform = this.getTransform(fbx_model);
-
-    const rotation = new Ammo.btQuaternion();
+addModel(mesh, scale) {
+  
+    const meshShape = this.createWireframeAndMesh(mesh, scale);
+    const transform = new this.Ammo.btTransform();
+    transform.setIdentity();
+    const origin = new this.Ammo.btVector3(0,0,0);
+    transform.setOrigin(origin);
+    const rotation = new this.Ammo.btQuaternion(0,0,0,1);
     //rotate to compensate for blender coordinates
     rotation.setEulerZYX(0, 0, -Math.PI/2); 
     transform.setRotation(rotation); // Adjust rotation in Ammo.js
@@ -84,7 +85,7 @@ addModel(fbx_model) {
     rigidBody.setActivationState(4); // Disable deactivation
     rigidBody.activate();
 
-    this.objects.push( fbx_model); 
+    this.objects.push(mesh); 
 
     return rigidBody;
 }
@@ -147,49 +148,21 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
   return rigidBody;
 }
 
-/**
-* Calculate transform of a loaded model
-* @param {THREE.Group} fbx_model instance of a loaded FBX model
-*/
-getTransform(fbx_model){
-    const position = fbx_model.position;
-    const quaternion = fbx_model.quaternion;
-    console.log(quaternion)
-    const transform = new this.Ammo.btTransform();
-    transform.setIdentity();
-    const origin = new this.Ammo.btVector3(position.x, position.y, position.z);
-    transform.setOrigin(origin);
-    const rotation = new this.Ammo.btQuaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-    transform.setRotation(rotation);
-    console.log("Ammo Quaternion:", rotation.x(), rotation.y(), rotation.z(), rotation.w());
-    console.log("Three.js Quaternion:", quaternion);
 
-
-    return transform;
-}
 
 /**
  * Loads a collision shape for a static mannequin
  * @param {THREE.Mesh} mesh Instance of a loaded FBX model
  */
-  createWireframeAndMesh(mesh, fbx_model) {
+  createWireframeAndMesh(mesh, factor) {
     //fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
     //fbx_model.updateMatrixWorld(true); // Ensure the world matrix is up to date
     //mesh.geometry.applyMatrix4(fbx_model.matrixWorld); // Apply all transformations to the geometry
-    mesh.geometry.computeBoundingBox(); // Update bounding box
-    mesh.geometry.computeBoundingSphere(); // Update bounding sphere
 
-    // Reset the model's transformations
-    fbx_model.position.set(0, 0, 0);
-    fbx_model.rotation.set(0, 0, 0);
-
-    mesh.geometry.scale(0.01, 0.01, 0.01); // Reapply the intended scale directly to geometry
-    fbx_model.updateMatrixWorld(true); 
+    mesh.geometry.scale(factor, factor, factor); // Reapply the intended scale directly to geometry
     const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
 
      this.scene.add(boxHelper);     
-     const axesHelper = new THREE.AxesHelper(1);
-     fbx_model.add(axesHelper);
     const geometry = mesh.geometry;
     const scale =100; // Same scale applied to the collision shape
     const meshShape = new Ammo.btTriangleMesh(true, true);

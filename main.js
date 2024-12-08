@@ -43,7 +43,7 @@ Ammo().then(function(Ammo) {
 	  mannequin = fbx;
 	  console.log("Mannequin scale:", fbx.scale);
 	  console.log("Mannequin position:", fbx.position);
-	  physics.addModel(mannequin);
+	  physics.addModel(mannequin.children[0], 0.01);
 	  mannequin.frustumCulled = false;
 	  scene.add(mannequin);
 	  fbx.traverse((child) => {
@@ -66,6 +66,7 @@ Ammo().then(function(Ammo) {
 		objLoader.setMaterials(materials); // Apply the loaded materials
 		objLoader.load('birdman.obj', (object) => {
 			scene.add(object); // Add the object to the scene
+			physics.addModel(object, 10);
 		});
 	});
 
@@ -126,7 +127,7 @@ Ammo().then(function(Ammo) {
 	// UI function
 	raycaster.setupUIHandlers();
 	console.log(physics.objects)
-	raycaster.setupMouseHandlers(anchorMesh, cloth, physics.objects[0], physics);
+	raycaster.setupMouseHandlers(anchorMesh, cloth, mannequin, physics);
 
 	// Animation Loop
 	function animate() {
