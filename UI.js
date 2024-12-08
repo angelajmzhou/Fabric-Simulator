@@ -15,7 +15,8 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.camera = cameraInstance;
   this.physics = physicsInstance;
   this.clippedPoints = [];
-  this.isDragging = false; // Track if the user is dragging
+  this.anchorDrag = false; // Track if the user is dragging
+  this.clothDrag = false;
   this.anchorClicked = false; // Track if the anchor is clicked
   this.mouse = new THREE.Vector2(); // Normalized device coordinates
   this.anchorMesh = null; // Reference to the anchor mesh
@@ -107,20 +108,22 @@ handleClipDrag(event, tempClip){
     const intersects = this.raycaster.intersectObject(cloth, true);
     let index;
     if (intersects.length > 0) {
-      if (this.isDragging) {
+      if (this.clothDrag) {
         // If dragging is already active, stop it
-        this.isDragging = false;
+        this.clothDrag = false;
         console.log('Dragging deactivated!');
         let intersection;
         if((intersection = this.clipPointToModel(mannequin))!= -1){
           this.physics.pinpoints[index].setPinLocation(index,intersection);
         }
         else{
-          this.physics.destroyPin(index);//need to implement this
+          if(this.physics.pinActive){
+            this.physics.destroyPin(index);//need to implement this
+          }
         }
       } else {
         // If dragging isn't active, start it
-        this.isDragging = true;
+        this.clothDrag = true;
         index = this.physics.createPinPoint(intersects[0].point);
         console.log('Dragging activated!');
       }
@@ -132,7 +135,7 @@ handleClipDrag(event, tempClip){
 // Step 2: Update the raycaster to use the mouse position and camera
 // Step 3: Check for intersections with objects in the scene
 // Step 4: If an intersection is found, use the closest point
-clipPointToModel(mannequin) {
+clipPointToModel(woman) {
 
   // Step 1
   const mouse = new THREE.Vector2();
@@ -143,7 +146,16 @@ clipPointToModel(mannequin) {
 
   // Step 2
   this.raycaster.setFromCamera(mouse, this.camera);
-
+  let mannequin = woman;
+  console.log(typeof mannequin);
+  if (!(mannequin instanceof THREE.Object3D)) {
+    console.error("Mannequin is not a valid THREE.Object3D!");
+  }
+  if (!mannequin) {
+    console.error("Mannequin is undefined or not yet loaded!");
+    return;
+  }
+  
   // Check for intersections
   const intersects = this.raycaster.intersectObject(mannequin);
 
@@ -188,13 +200,13 @@ checkMouseClickOnAnchor(event, anchorMesh) {
   const intersects = this.raycaster.intersectObject(anchorMesh, true);
 
   if (intersects.length > 0) {
-    if (this.isDragging) {
+    if (this.anchorDrag) {
       // If dragging is already active, stop it
-      this.isDragging = false;
+      this.anchorDrag = false;
       console.log('Dragging deactivated!');
     } else {
       // If dragging isn't active, start it
-      this.isDragging = true;
+      this.anchorDrag = true;
       console.log('Dragging activated!');
     }
   } else {
@@ -253,7 +265,7 @@ setupUIHandlers() {
     }
   
     // Mouse state flags
-    this.isDragging = false;
+    this.anchorDrag = false;
   
     // Add event listeners
     window.addEventListener('mousedown', (event) => {
@@ -262,7 +274,7 @@ setupUIHandlers() {
       });
   
     window.addEventListener('mousemove', (event) => {
-      if (this.isDragging) {
+      if (this.anchorDrag) {
         this.handleAnchorDrag(event, anchorMesh);
         this.checkMouseClickOnCloth(event, cloth, mannequin)
       }

@@ -10,7 +10,7 @@ class Physics {
         this.Ammo = Ammo;
         this.scene = scene;
         this.objects = []; // Track objects added to the physics world
-        this.softbodies = []; // Track objects added to the physics world
+        this.cloth = null; // Track objects added to the physics world
         this.pinpoints = [];
 		    this.margin = 0.05;
         this.time = performance.now();
@@ -83,7 +83,7 @@ addModel(fbx_model) {
     rigidBody.setActivationState(4); // Disable deactivation
     rigidBody.activate();
 
-    this.objects.push({physicsBody: rigidBody, mesh: fbx_model}); 
+    this.objects.push( fbx_model); 
 
     return rigidBody;
 }
@@ -116,7 +116,7 @@ addObject(threeObj, shape, origin, mesh) {
 
     rigidBody.setActivationState(4); // Disable deactivation
 
-    this.objects.push({physicsBody: rigidBody, mesh: mesh}); 
+    this.objects.push(mesh); 
 
     return rigidBody;
 }
@@ -141,7 +141,7 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
 
   rigidBody.setActivationState(4); // Disable deactivation
 
-  this.objects.push({physicsBody: rigidBody, mesh: mesh}); 
+  this.objects.push(mesh); 
 
   return rigidBody;
 }
@@ -343,7 +343,7 @@ createCloth(
   // Disable deactivation
   clothSoftBody.setActivationState(4);
 
-  this.softbodies.push(cloth);
+  this.cloth = cloth;
 
   // Clean up Ammo.js objects
   Ammo.destroy(clothCorner00);
@@ -406,7 +406,7 @@ createCloth(
       
       // Find the closest vertex index on the cloth
     findClosestVertex(targetPosition) {
-      const geometry = softbodies[0].geometry;
+      const geometry = this.cloth.geometry;
       const vertices = geometry.attributes.position.array;
       let closestIndex = -1;
       let closestDistance = Infinity;
@@ -430,8 +430,8 @@ createCloth(
   createPinPoint(clickCoord){
     this.pinActive = true;
     
-    const softBodyNodes = this.softbodies[0].get_m_nodes();
-    const clothVertexIndex = this.findClosestVertex(); // Vertex to drag
+    const softBodyNodes = this.cloth.userData.physicsBody.get_m_nodes();
+    const clothVertexIndex = this.findClosestVertex(clickCoord); // Vertex to drag
     const clothNode = softBodyNodes.at(clothVertexIndex);
     const clothNodePosition = clothNode.get_m_x(); // Initial position of the vertex
 
@@ -447,9 +447,9 @@ createCloth(
     const sphereTransform = new Ammo.btTransform();
     sphereTransform.setIdentity();
     sphereTransform.setOrigin(new Ammo.btVector3(
-      clickCoord.x(),
-      clickCoord.y(),
-      clickCoord.z()
+      clickCoord.x,
+      clickCoord.y,
+      clickCoord.z
     ));
     const sphereMass = 1; // Small mass
     const sphereLocalInertia = new Ammo.btVector3(0, 0, 0);
@@ -459,7 +459,7 @@ createCloth(
     const sphereBody = new Ammo.btRigidBody(
       new Ammo.btRigidBodyConstructionInfo(sphereMass, sphereMotionState, sphereShape, sphereLocalInertia)
     );
-    physicsWorld.addRigidBody(sphereBody);
+    this.physicsWorld.addRigidBody(sphereBody);
 
     // Sync Three.js sphere with Ammo.js rigid body
     sphereMesh.position.set(
@@ -469,7 +469,7 @@ createCloth(
     );
     sphereMesh.userData.physicsBody = sphereBody;
     // 2. Anchor the cloth vertex to the sphere
-    softBody.appendAnchor(clothVertexIndex, sphereBody, true, 1.0);
+    this.cloth.userData.physicsBody.appendAnchor(clothVertexIndex, sphereBody, true, 1.0);
     
     const index = this.pinpoints.size;
     this.pinpoints.push(sphereMesh);
@@ -486,6 +486,7 @@ createCloth(
   }
 
   destroyPin(index){
+    if(this.pinpoints.length==0) {return;}
     this.pinActive = false;
     const mesh = this.pinpoints[index];
     const body = mesh.userData.physicsBody;
@@ -515,9 +516,8 @@ createCloth(
         this.physicsWorld.stepSimulation(1/60, 5);
     
         // Update each soft body
-        this.softbodies.forEach((cloth) => {
-            this.clothUpdate(cloth);
-        });
+        this.clothUpdate(this.cloth);
+        
         
         // Sync anchor mesh with the physics body
         const anchorPhysicsBody = anchorMesh.userData.physicsBody;
