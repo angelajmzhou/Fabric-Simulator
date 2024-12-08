@@ -136,32 +136,47 @@ handleClothDrag(event){
   }
   checkMouseClickOnPin(event, physics) {
     const mouse = new THREE.Vector2();
-    var pin = null;
+    let pin = null;
+  
+    // Normalize mouse click coordinates
     mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
-    mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;  
-    
+    mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;
+  
     // Set up the raycaster using the mouse click location
     this.raycaster.setFromCamera(mouse, this.camera);
-    if (physics.pinActive){
+  
+    if (physics.pinActive) {
+      // If a pin is already active, test for interaction with it
       pin = physics.activePin;
-    }
-    // Perform intersection test with the anchor
-    const intersects = this.raycaster.intersectObject(pin, true);
-     if (intersects.length > 0) {
-      if(this.clothDrag){
-        // If dragging active, stop it
-        this.clothDrag = false;
-        console.log('Dragging deactivated!');
+    } else {
+       // Loop through all pins to see if clicked
+       for (let i = 0; i < physics.pinpoints.length; i++) {
+        var intersectspoint = this.intersectObject(physics.pinpoints[i], true);
+        if (intersectspoint.length > 0) {
+          pin = this.pinpoints[i];
+          break; // Stop loop if a pin is clicked
+        }
       }
-      else{
-        // If dragging isn't active, start it
-        this.clothDrag = true;
-        console.log('Dragging activated!');
+    }
+    if (pin) {
+      const intersects = this.raycaster.intersectObject(pin, true);
+      if (intersects.length > 0) {
+        if (this.clothDrag) {
+          this.clothDrag = false;
+          console.log('Dragging deactivated!');
+        } else {
+          this.clothDrag = true;
+          console.log('Dragging activated!');
+        }
+        physics.activePin = pin; // Set the clicked pin as the active pin
+      } else {
+        console.log('No valid intersection');
       }
     } else {
-      console.log('No valid intersection');
+      console.log('No pin clicked');
     }
   }
+  
 
 // Step 1: Get the current mouse position in normalized device coordinates (NDC)
 // Step 2: Update the raycaster to use the mouse position and camera
@@ -306,10 +321,11 @@ setupUIHandlers() {
     // Add event listeners
     window.addEventListener('mousedown', (event) => {
       this.checkMouseClickOnAnchor(event, anchorMesh);
-      this.checkMouseClickOnCloth(event, cloth, mannequin, physics);
-      if (this.clothDrag) {this.checkMouseClickOnPin(event, physics);}
-      });
-  
+      if (!this.clothDrag) {
+        this.checkMouseClickOnCloth(event, cloth, mannequin, physics);
+      }
+      this.checkMouseClickOnPin(event, physics);
+    });
     window.addEventListener('mousemove', (event) => {
       if (this.anchorDrag) {
         this.handleAnchorDrag(event, anchorMesh);
