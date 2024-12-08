@@ -58,12 +58,13 @@ class Physics {
 * Add a rigid body to the physics world.
 * @param {THREE.mesh} mesh instance of a loaded mesh
 */
-addModel(mesh, scale) {
+addModel(mesh, scale, frame, pos) {
   
-    const meshShape = this.createWireframeAndMesh(mesh, scale);
+    const meshShape = this.createWireframeAndMesh(mesh, scale, frame);
     const transform = new this.Ammo.btTransform();
     transform.setIdentity();
-    const origin = new this.Ammo.btVector3(0,0,0);
+    console.log(pos);
+    const origin = new this.Ammo.btVector3(pos.x, pos.y, pos.z);
     transform.setOrigin(origin);
     const rotation = new this.Ammo.btQuaternion(0,0,0,1);
     //rotate to compensate for blender coordinates
@@ -154,17 +155,29 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
  * Loads a collision shape for a static mannequin
  * @param {THREE.Mesh} mesh Instance of a loaded FBX model
  */
-  createWireframeAndMesh(mesh, factor) {
+  createWireframeAndMesh(mesh, factor, frame) {
     //fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
     //fbx_model.updateMatrixWorld(true); // Ensure the world matrix is up to date
     //mesh.geometry.applyMatrix4(fbx_model.matrixWorld); // Apply all transformations to the geometry
-
-    mesh.geometry.scale(factor, factor, factor); // Reapply the intended scale directly to geometry
+    if (mesh instanceof THREE.Mesh) {
+      console.log("The object is a THREE.Mesh");
+  } else {
+      console.error("The provided object is not a THREE.Mesh. It's a:", mesh.constructor.name);
+  }
+    console.log(typeof mesh)
+    mesh.geometry.scale(factor, factor, factor);
     const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
 
      this.scene.add(boxHelper);     
     const geometry = mesh.geometry;
-    const scale =100; // Same scale applied to the collision shape
+    let scale = factor;
+    if(frame){
+       scale =1/factor; // Same scale applied to the collision shape
+    }
+    else{
+      scale = 1;
+
+    }
     const meshShape = new Ammo.btTriangleMesh(true, true);
     const vertices = geometry.attributes.position.array;
 

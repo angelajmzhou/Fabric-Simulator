@@ -9,6 +9,7 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.raycaster = new THREE.Raycaster();
   this.raycaster.near = 0.1;
   this.raycaster.far = 1000; // Adjust to your scene size
+  this.raycaster.layers.enableAll();
   this.raycaster.params.Line.threshold = 5
   this.raycaster.params.Points.threshold = 5
   this.pinIndex = 0;
@@ -109,19 +110,20 @@ handleClothDrag(event){
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
      if (intersects.length > 0) {
-      // if (this.clothDrag) {
-      //   // If dragging is already active, stop it
-      //   this.clothDrag = false;
-      //   console.log('Dragging deactivated!');
-      //   let intersection = this.clipPointToModel(mannequin);
-      //   if(intersection != -1){
-      //     physics.setPinLocation(this.index, intersection);
-      //   }
-      //   else{
-      //     if(physics.pinActive){
-      //       physics.destroyPin(this.index);//need to implement this
-      //     }
-      //   }
+       if (this.clothDrag) {
+         // If dragging is already active, stop it
+         this.clothDrag = false;
+         console.log('Dragging deactivated!');
+         let intersection = this.clipPointToModel(mannequin);
+         if(intersection != -1){
+           physics.setPinLocation(this.index, intersection);
+       }
+         else{
+           if(physics.pinActive){
+             physics.destroyPin(this.index);//need to implement this
+           }
+         }
+         /*
         if(!this.clothDrag){
           // If dragging isn't active, start it
           this.clothDrag = true;
@@ -131,10 +133,12 @@ handleClothDrag(event){
         else{
           console.log('Dragging already active!');
         }
+          */
     } else {
       console.log('No valid intersection');
     }
   }
+}
   checkMouseClickOnPin(event, physics) {
     const mouse = new THREE.Vector2();
     let pin = null;
