@@ -1,3 +1,4 @@
+import { flattenJSON } from 'three/src/animation/AnimationUtils.js';
 import Input from './input.js';
 import * as THREE from 'three';
 
@@ -10,7 +11,7 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.raycaster.far = 1000; // Adjust to your scene size
   this.raycaster.params.Line.threshold = 5
   this.raycaster.params.Points.threshold = 5
-  this.index = 0;
+  this.pinIndex = 0;
   // objects be in this scene
   this.scene = sceneInstance;
   // camera for converting screen space to world space
@@ -120,13 +121,15 @@ handleClothDrag(event){
       //       physics.destroyPin(this.index);//need to implement this
       //     }
       //   }
-        if(!this.clothDrag && !physics.pinActive){
+        if(!this.clothDrag){
           // If dragging isn't active, start it
           this.clothDrag = true;
-          this.index = physics.createPinPoint(intersects[0].point);
+          this.pinIndex = physics.createPinPoint(intersects[0].point);
           console.log('Dragging activated!');
         }
-      // }
+        else{
+          console.log('Dragging already active!');
+        }
     } else {
       console.log('No valid intersection');
     }
@@ -142,7 +145,6 @@ handleClothDrag(event){
     if (physics.pinActive){
       pin = physics.activePin;
     }
-
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(pin, true);
      if (intersects.length > 0) {
@@ -283,6 +285,13 @@ setupUIHandlers() {
       clearClippedPoints();
       LButton.classList.remove('active-button');
     }
+    // if (event.key.toLowerCase() === 'w') {
+    //   console.log('[W] Key released');
+    //   if (this.physics.pinActive){
+    //     this.physics.destroyPin(this.physics.activePin);
+
+    //   }
+    // }
   });
 }
   setupMouseHandlers(anchorMesh, cloth, mannequin, physics) {
@@ -298,7 +307,7 @@ setupUIHandlers() {
     window.addEventListener('mousedown', (event) => {
       this.checkMouseClickOnAnchor(event, anchorMesh);
       this.checkMouseClickOnCloth(event, cloth, mannequin, physics);
-      this.checkMouseClickOnPin(event, physics);
+      if (this.clothDrag) {this.checkMouseClickOnPin(event, physics);}
       });
   
     window.addEventListener('mousemove', (event) => {

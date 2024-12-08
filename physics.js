@@ -475,7 +475,6 @@ createCloth(
     this.activePin = sphereMesh;
     const index = this.pinpoints.length-1;
 
-
     return index;
   }
   setPinLocation(index, location){
