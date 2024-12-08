@@ -41,9 +41,9 @@ Ammo().then(function(Ammo) {
 	  mannequin = fbx;
 	  console.log("Mannequin scale:", fbx.scale);
 	  console.log("Mannequin position:", fbx.position);
-	  physics.addModel(fbx);
-	  fbx.frustumCulled = false;
-	  scene.add(fbx);
+	  physics.addModel(mannequin);
+	  mannequin.frustumCulled = false;
+	  scene.add(mannequin);
 	});
 
 	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(10, 0.5, 10));
@@ -101,7 +101,8 @@ Ammo().then(function(Ammo) {
 	
 	// UI function
 	raycaster.setupUIHandlers();
-	raycaster.setupMouseHandlers(anchorMesh, cloth, mannequin);
+	console.log(physics.objects)
+	raycaster.setupMouseHandlers(anchorMesh, cloth, physics.objects[0]);
 
 	// Animation Loop
 	function animate() {

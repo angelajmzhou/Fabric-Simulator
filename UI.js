@@ -6,6 +6,9 @@ class UI{
 constructor(sceneInstance, cameraInstance, physicsInstance) {
   // mouse position in 3D
   this.raycaster = new THREE.Raycaster();
+  this.raycaster.near = 0.1;
+  this.raycaster.far = 1000; // Adjust to your scene size
+
   // objects be in this scene
   this.scene = sceneInstance;
   // camera for converting screen space to world space
@@ -97,7 +100,9 @@ handleClipDrag(event, tempClip){
     if (!(cloth instanceof THREE.Mesh)) {
       console.error("Cloth is not a valid THREE.Mesh object!");
     }
-    
+    cloth.geometry.computeBoundingBox();
+    cloth.geometry.computeBoundingSphere();
+
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
     let index;
@@ -127,7 +132,7 @@ handleClipDrag(event, tempClip){
 // Step 2: Update the raycaster to use the mouse position and camera
 // Step 3: Check for intersections with objects in the scene
 // Step 4: If an intersection is found, use the closest point
-clipPointToModel() {
+clipPointToModel(mannequin) {
 
   // Step 1
   const mouse = new THREE.Vector2();
@@ -140,7 +145,7 @@ clipPointToModel() {
   this.raycaster.setFromCamera(mouse, this.camera);
 
   // Check for intersections
-  const intersects = this.raycaster.intersectObjects(mannequin, true);
+  const intersects = this.raycaster.intersectObject(mannequin);
 
   // Step 4
   if (intersects.length > 0) {
@@ -214,7 +219,7 @@ setupUIHandlers() {
   window.addEventListener('keydown', (event) => {
     if (event.key.toLowerCase() === 's') {
       console.log('[S] Key pressed');
-      clipPointToModel();
+      //clipPointToModel();
       SButton.classList.add('active-button');
     }
     if (event.key.toLowerCase() === 'a') {

@@ -447,9 +447,9 @@ createCloth(
     const sphereTransform = new Ammo.btTransform();
     sphereTransform.setIdentity();
     sphereTransform.setOrigin(new Ammo.btVector3(
-      clothNodePosition.x(),
-      clothNodePosition.y(),
-      clothNodePosition.z()
+      clickCoord.x(),
+      clickCoord.y(),
+      clickCoord.z()
     ));
     const sphereMass = 1; // Small mass
     const sphereLocalInertia = new Ammo.btVector3(0, 0, 0);
