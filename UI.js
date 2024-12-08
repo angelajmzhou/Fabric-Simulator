@@ -92,7 +92,7 @@ handleClothDrag(event){
     }
   }
 
-  checkMouseClickOnCloth(event, cloth, mannequin) {
+  checkMouseClickOnCloth(event, cloth, mannequin, physics) {
     const mouse = new THREE.Vector2();
     mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
     mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;  
@@ -107,21 +107,53 @@ handleClothDrag(event){
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
      if (intersects.length > 0) {
-      if (this.clothDrag && this.physics.pinActive) {
-        // If dragging is already active, stop it
+      // if (this.clothDrag) {
+      //   // If dragging is already active, stop it
+      //   this.clothDrag = false;
+      //   console.log('Dragging deactivated!');
+      //   let intersection = this.clipPointToModel(mannequin);
+      //   if(intersection != -1){
+      //     physics.setPinLocation(this.index, intersection);
+      //   }
+      //   else{
+      //     if(physics.pinActive){
+      //       physics.destroyPin(this.index);//need to implement this
+      //     }
+      //   }
+        if(!this.clothDrag && !physics.pinActive){
+          // If dragging isn't active, start it
+          this.clothDrag = true;
+          this.index = physics.createPinPoint(intersects[0].point);
+          console.log('Dragging activated!');
+        }
+      // }
+    } else {
+      console.log('No valid intersection');
+    }
+  }
+  checkMouseClickOnPin(event, physics) {
+    const mouse = new THREE.Vector2();
+    var pin = null;
+    mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
+    mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;  
+    
+    // Set up the raycaster using the mouse click location
+    this.raycaster.setFromCamera(mouse, this.camera);
+    if (physics.pinActive){
+      pin = physics.activePin;
+    }
+
+    // Perform intersection test with the anchor
+    const intersects = this.raycaster.intersectObject(pin, true);
+     if (intersects.length > 0) {
+      if(this.clothDrag){
+        // If dragging active, stop it
         this.clothDrag = false;
         console.log('Dragging deactivated!');
-        let intersection = this.clipPointToModel(mannequin);
-        if(intersection != -1){
-          this.physics.setPinLocation(this.index,intersection);
-        }
-        else{
-            this.physics.destroyPin(this.index);
-        }
-      } else {
+      }
+      else{
         // If dragging isn't active, start it
         this.clothDrag = true;
-        this.index = this.physics.createPinPoint(intersects[0].point);
         console.log('Dragging activated!');
       }
     } else {
@@ -224,12 +256,12 @@ setupUIHandlers() {
 
   // Keyboard event listeners
   window.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 's') {
+    if (event.key.toLowerCase() === 'j') {
       console.log('[S] Key pressed');
       //clipPointToModel();
       SButton.classList.add('active-button');
     }
-    if (event.key.toLowerCase() === 'a') {
+    if (event.key.toLowerCase() === 'k') {
       AButton.classList.add('active-button');
     }
     if (event.key.toLowerCase() === 'l') {
@@ -238,10 +270,10 @@ setupUIHandlers() {
   });
 
   window.addEventListener('keyup', (event) => {
-    if (event.key.toLowerCase() === 's') {
+    if (event.key.toLowerCase() === 'j') {
       SButton.classList.remove('active-button');
     }
-    if (event.key.toLowerCase() === 'a') {
+    if (event.key.toLowerCase() === 'k') {
       console.log('[A] Key released');
       showClippedPoints();
       AButton.classList.remove('active-button');
@@ -253,7 +285,7 @@ setupUIHandlers() {
     }
   });
 }
-  setupMouseHandlers(anchorMesh, cloth, mannequin) {
+  setupMouseHandlers(anchorMesh, cloth, mannequin, physics) {
     if (!this.raycaster || !this.camera || !this.scene) {
       console.log('Raycaster, camera, or scene not initialized!');
       return;
@@ -265,7 +297,8 @@ setupUIHandlers() {
     // Add event listeners
     window.addEventListener('mousedown', (event) => {
       this.checkMouseClickOnAnchor(event, anchorMesh);
-      this.checkMouseClickOnCloth(event, cloth, mannequin)
+      this.checkMouseClickOnCloth(event, cloth, mannequin, physics);
+      this.checkMouseClickOnPin(event, physics);
       });
   
     window.addEventListener('mousemove', (event) => {
@@ -276,5 +309,26 @@ setupUIHandlers() {
       }
     });
   }
+  // addWASDRotation(controls) {
+  //   const rotationSpeed = 0.02; // Adjust rotation speed as needed
+  
+  //   if (Input.isKeyPressed('w')) {
+  //     controls.object.rotation.x -= rotationSpeed; // Rotate upward
+  //     console.log("w pressed");
+  //   }
+  //   if (Input.isKeyPressed('s')) {
+  //     controls.object.rotation.x += rotationSpeed; // Rotate downward
+  //     console.log("s pressed");
+  //   }
+  //   if (Input.isKeyPressed('a')) {
+  //     controls.object.rotation.y -= rotationSpeed; // Rotate left
+  //     console.log("a pressed");
+  //   }
+  //   if (Input.isKeyPressed('d')) {
+  //     controls.object.rotation.y += rotationSpeed; // Rotate right
+  //     console.log("d pressed");
+  //   }
+  //   controls.update(); // Ensure OrbitControls updates its internal state
+  // }
 }
 export default UI

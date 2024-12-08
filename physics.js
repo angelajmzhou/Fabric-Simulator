@@ -512,6 +512,7 @@ createCloth(
 
     this.physicsWorld.removeRigidBody(body);
     this.Ammo.destroy(body.getMotionState());
+    this.Ammo.destroy(body.getCollisionShape());
     this.Ammo.destroy(body);
     this.pinpoints.splice(index, 1);
   }
