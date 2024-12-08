@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Physics from './physics.js';
 import UI from './UI.js';
@@ -55,8 +57,18 @@ Ammo().then(function(Ammo) {
             }
         }
 	});
-
 	});
+
+	const mtlLoader = new MTLLoader();
+	mtlLoader.load('birdman.mtl', (materials) => {
+		materials.preload(); 
+		const objLoader = new OBJLoader();
+		objLoader.setMaterials(materials); // Apply the loaded materials
+		objLoader.load('birdman.obj', (object) => {
+			scene.add(object); // Add the object to the scene
+		});
+	});
+
 
 	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(10, 0.5, 10));
 	const origin = new Ammo.btVector3(0,-1,0);

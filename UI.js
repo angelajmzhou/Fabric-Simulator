@@ -8,6 +8,8 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.raycaster = new THREE.Raycaster();
   this.raycaster.near = 0.1;
   this.raycaster.far = 1000; // Adjust to your scene size
+  this.raycaster.params.Line.threshold = 5
+  this.raycaster.params.Points.threshold = 5
   this.index = 0;
   // objects be in this scene
   this.scene = sceneInstance;
@@ -105,7 +107,7 @@ handleClothDrag(event){
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
      if (intersects.length > 0) {
-      if (this.clothDrag) {
+      if (this.clothDrag && this.physics.pinActive) {
         // If dragging is already active, stop it
         this.clothDrag = false;
         console.log('Dragging deactivated!');
@@ -114,9 +116,7 @@ handleClothDrag(event){
           this.physics.setPinLocation(this.index,intersection);
         }
         else{
-          if(this.physics.pinActive){
-            this.physics.destroyPin(this.index);//need to implement this
-          }
+            this.physics.destroyPin(this.index);
         }
       } else {
         // If dragging isn't active, start it

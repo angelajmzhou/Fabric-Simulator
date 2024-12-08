@@ -494,6 +494,7 @@ createCloth(
       console.log("length exceeded for pinpoints");
       return;
     }
+    console.log("pin destroyed")
     this.pinActive = false;
     const mesh = this.pinpoints[index];
     const body = mesh.userData.physicsBody;
