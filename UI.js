@@ -77,8 +77,6 @@ handleClothDrag(event){
     // Calculate the view vector (camera direction)
     const viewVector = new THREE.Vector3();
     this.camera.getWorldDirection(viewVector); // Get the normalized direction the camera is looking
-    console.log(typeof tempClip.position);
-    console.log(tempClip.position);
     // Define a plane perpendicular to the view vector, passing through the anchor's position
     const movementPlane = new THREE.Plane(viewVector, -viewVector.dot(tempClip.position));
     const intersection = new THREE.Vector3();
@@ -87,7 +85,6 @@ handleClothDrag(event){
     if (this.raycaster.ray.intersectPlane(movementPlane, intersection)) {
       // Directly set the position to the intersection point without lerping
       tempClip.position.copy(intersection);
-      console.log('Anchor position updated to:', tempClip.position);
     } else {
       console.log('No intersection with movement plane.');
     }
@@ -104,7 +101,6 @@ handleClothDrag(event){
       console.error("Cloth is not a valid THREE.Mesh object!");
     }
     cloth.geometry.computeBoundingBox();
-    cloth.geometry.computeBoundingSphere();
 
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
@@ -156,9 +152,9 @@ clipPointToModel(woman) {
     console.error("Mannequin is undefined or not yet loaded!");
     return;
   }
-  
+  mannequin.computeBoundingBox();
   // Check for intersections
-  const intersects = this.raycaster.intersectObject(mannequin);
+  const intersects = this.raycaster.intersectObject(mannequin, true);
 
   // Step 4
   if (intersects.length > 0) {
