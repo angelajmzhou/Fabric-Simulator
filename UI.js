@@ -8,7 +8,7 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.raycaster = new THREE.Raycaster();
   this.raycaster.near = 0.1;
   this.raycaster.far = 1000; // Adjust to your scene size
-
+  this.index = 0;
   // objects be in this scene
   this.scene = sceneInstance;
   // camera for converting screen space to world space
@@ -64,7 +64,8 @@ handleAnchorDrag(event, anchorMesh) {
 
 //check if a click is on the cloth, and if it is, drag it
 //upon unclick, check if the raycaster intersects the mannequin. if yes, pin it. if no, let go of the cloth and destroy the temporary physics
-handleClothDrag(event, tempClip){
+handleClothDrag(event){
+    let tempClip = this.physics.activePin;
     // Convert mouse position to normalized device coordinates (NDC)
     const mouse = new THREE.Vector2();
     mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
@@ -76,7 +77,8 @@ handleClothDrag(event, tempClip){
     // Calculate the view vector (camera direction)
     const viewVector = new THREE.Vector3();
     this.camera.getWorldDirection(viewVector); // Get the normalized direction the camera is looking
-  
+    console.log(typeof tempClip.position);
+    console.log(tempClip.position);
     // Define a plane perpendicular to the view vector, passing through the anchor's position
     const movementPlane = new THREE.Plane(viewVector, -viewVector.dot(tempClip.position));
     const intersection = new THREE.Vector3();
@@ -85,6 +87,7 @@ handleClothDrag(event, tempClip){
     if (this.raycaster.ray.intersectPlane(movementPlane, intersection)) {
       // Directly set the position to the intersection point without lerping
       tempClip.position.copy(intersection);
+      console.log('Anchor position updated to:', tempClip.position);
     } else {
       console.log('No intersection with movement plane.');
     }
@@ -105,25 +108,24 @@ handleClothDrag(event, tempClip){
 
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
-    let index = 0;
-    if (intersects.length > 0) {
+     if (intersects.length > 0) {
       if (this.clothDrag) {
         // If dragging is already active, stop it
         this.clothDrag = false;
         console.log('Dragging deactivated!');
-        let intersection =this.clipPointToModel(mannequin);
+        let intersection = this.clipPointToModel(mannequin);
         if(intersection != -1){
-          this.physics.pinpoints[index].setPinLocation(index,intersection);
+          this.physics.pinpoints[this.index].setPinLocation(this.index,intersection);
         }
         else{
           if(this.physics.pinActive){
-            this.physics.destroyPin(index);//need to implement this
+            this.physics.destroyPin(this.index);//need to implement this
           }
         }
       } else {
         // If dragging isn't active, start it
         this.clothDrag = true;
-        index = this.physics.createPinPoint(intersects[0].point);
+        this.index = this.physics.createPinPoint(intersects[0].point);
         console.log('Dragging activated!');
       }
     } else {
@@ -175,14 +177,14 @@ clipPointToModel(woman) {
 
 showClippedPoints() {
   console.log('Showing all clipped points:');
-  clippedPoints.forEach((point, index) => {
+  this.clippedPoints.forEach((point, index) => {
     console.log(`Point ${index + 1}:`, point);
   });
 }
 
 clearClippedPoints() {
   console.log('Clearing all clipped points...');
-  clippedPoints = [];
+  this.clippedPoints = [];
   showClippedPoints();
 }
 
@@ -275,7 +277,8 @@ setupUIHandlers() {
     window.addEventListener('mousemove', (event) => {
       if (this.anchorDrag) {
         this.handleAnchorDrag(event, anchorMesh);
-        this.handleClothDrag(event, cloth, mannequin);
+      } else if(this.clothDrag){
+        this.handleClothDrag(event);
       }
     });
   }

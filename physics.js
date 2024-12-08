@@ -471,7 +471,8 @@ createCloth(
     // 2. Anchor the cloth vertex to the sphere
     this.cloth.userData.physicsBody.appendAnchor(clothVertexIndex, sphereBody, true, 1.0);
     
-     this.pinpoints.push(sphereMesh);
+    this.pinpoints.push(sphereMesh);
+    this.activePin = sphereMesh;
     const index = this.pinpoints.length-1;
 
 
@@ -532,11 +533,11 @@ createCloth(
           anchorPhysicsBody.setWorldTransform(this.transformAux1);
 
         }
-        if (this.pinActive){
+        if (this.pinActive && this.activePin){
           this.transformAux1.setIdentity();
           //eerrr how handle dis
-          this.transformAux1.setOrigin(new this.Ammo.btVector3(anchorMesh.position.x, anchorMesh.position.y, anchorMesh.position.z));
-          anchorPhysicsBody.setWorldTransform(this.transformAux1);
+          this.transformAux1.setOrigin(new this.Ammo.btVector3(this.activePin.position.x, this.activePin.position.y, this.activePin.position.z));
+          this.activePin.userData.physicsBody.setWorldTransform(this.transformAux1);
         }
         
     }    
