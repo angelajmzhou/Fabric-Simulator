@@ -128,6 +128,7 @@ handleClothDrag(event){
       console.log('No valid intersection');
     }
   }
+
 // Step 1: Get the current mouse position in normalized device coordinates (NDC)
 // Step 2: Update the raycaster to use the mouse position and camera
 // Step 3: Check for intersections with objects in the scene
@@ -144,7 +145,7 @@ clipPointToModel(woman) {
   // Step 2
   this.raycaster.setFromCamera(mouse, this.camera);
   let mannequin = woman;
-  console.log(typeof mannequin);
+  console.log(mannequin.children);
   if (!(mannequin instanceof THREE.Object3D)) {
     console.error("Mannequin is not a valid THREE.Object3D!");
   }
@@ -154,7 +155,7 @@ clipPointToModel(woman) {
   }
   //mannequin.computeBoundingBox();
   // Check for intersections
-  const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+  const intersects = this.raycaster.intersectObjects([mannequin]);
 
 
   // Step 4

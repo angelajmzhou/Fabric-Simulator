@@ -44,6 +44,18 @@ Ammo().then(function(Ammo) {
 	  physics.addModel(mannequin);
 	  mannequin.frustumCulled = false;
 	  scene.add(mannequin);
+	  fbx.traverse((child) => {
+        if (child.isMesh) {
+            // Handle cases where material might be an array (multi-material)
+            if (child.material) {
+                // Single material
+                child.material.side = THREE.DoubleSide;
+                child.material.needsUpdate = true;
+				console.log("material update")
+            }
+        }
+	});
+
 	});
 
 	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(10, 0.5, 10));

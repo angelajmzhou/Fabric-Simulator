@@ -16,6 +16,7 @@ class Physics {
         this.time = performance.now();
         this.activePin = null;
         this.pinActive = false;
+        this.wireframe = null;
         this.collisionConfiguration = new this.Ammo.btSoftBodyRigidBodyCollisionConfiguration(); 
         // Manage collisions between objects with configuration
         this.dispatcher = new this.Ammo.btCollisionDispatcher(this.collisionConfiguration);
@@ -172,9 +173,9 @@ getTransform(fbx_model){
  * @param {THREE.Mesh} mesh Instance of a loaded FBX model
  */
   createWireframeAndMesh(mesh, fbx_model) {
-    fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
-    fbx_model.updateMatrixWorld(true); // Ensure the world matrix is up to date
-    mesh.geometry.applyMatrix4(fbx_model.matrixWorld); // Apply all transformations to the geometry
+    //fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
+    //fbx_model.updateMatrixWorld(true); // Ensure the world matrix is up to date
+    //mesh.geometry.applyMatrix4(fbx_model.matrixWorld); // Apply all transformations to the geometry
     mesh.geometry.computeBoundingBox(); // Update bounding box
     mesh.geometry.computeBoundingSphere(); // Update bounding sphere
 
@@ -183,11 +184,10 @@ getTransform(fbx_model){
     fbx_model.rotation.set(0, 0, 0);
 
     mesh.geometry.scale(0.01, 0.01, 0.01); // Reapply the intended scale directly to geometry
+    fbx_model.updateMatrixWorld(true); 
     const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
-     this.scene.add(boxHelper);
-     console.log("FBX Model Rotation:", fbx_model.rotation);
-     console.log("FBX Model MatrixWorld:", fbx_model.matrixWorld);
-     
+
+     this.scene.add(boxHelper);     
      const axesHelper = new THREE.AxesHelper(1);
      fbx_model.add(axesHelper);
     const geometry = mesh.geometry;
@@ -240,7 +240,7 @@ getTransform(fbx_model){
 
     // Add the wireframe to the scene
     this.scene.add(collisionWireframe);
-
+    this.wireframe = collisionWireframe;
     console.log("Collision shape and wireframe created:", meshShape.constructor.name);
     return shape;
   }
