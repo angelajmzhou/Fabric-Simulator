@@ -429,7 +429,8 @@ createCloth(
   }
   createPinPoint(clickCoord){
     this.pinActive = true;
-    const softBodyNodes = softBody.get_m_nodes();
+    
+    const softBodyNodes = this.softbodies[0].get_m_nodes();
     const clothVertexIndex = this.findClosestVertex(); // Vertex to drag
     const clothNode = softBodyNodes.at(clothVertexIndex);
     const clothNodePosition = clothNode.get_m_x(); // Initial position of the vertex

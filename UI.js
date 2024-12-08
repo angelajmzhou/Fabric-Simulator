@@ -55,10 +55,7 @@ handleAnchorDrag(event, anchorMesh) {
   if (this.raycaster.ray.intersectPlane(movementPlane, intersection)) {
     // Directly set the position to the intersection point without lerping
     anchorMesh.position.copy(intersection);
-    console.log('Anchor position updated to:', anchorMesh.position);
-  } else {
-    console.log('No intersection with movement plane.');
-  }
+  } 
 }
 
 //check if a click is on the cloth, and if it is, drag it
@@ -94,10 +91,13 @@ handleClipDrag(event, tempClip){
     const mouse = new THREE.Vector2();
     mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
     mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;  
-  
+    
     // Set up the raycaster using the mouse click location
     this.raycaster.setFromCamera(mouse, this.camera);
-  
+    if (!(cloth instanceof THREE.Mesh)) {
+      console.error("Cloth is not a valid THREE.Mesh object!");
+    }
+    
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
     let index;
@@ -111,7 +111,7 @@ handleClipDrag(event, tempClip){
           this.physics.pinpoints[index].setPinLocation(index,intersection);
         }
         else{
-          this.physics.destroyPin();//need to implement this
+          this.physics.destroyPin(index);//need to implement this
         }
       } else {
         // If dragging isn't active, start it
@@ -128,11 +128,6 @@ handleClipDrag(event, tempClip){
 // Step 3: Check for intersections with objects in the scene
 // Step 4: If an intersection is found, use the closest point
 clipPointToModel() {
-  
-  if (!raycaster || !camera || !scene) {
-    console.log('Raycaster or scene/camera not initialized!');
-    return;
-  }
 
   // Step 1
   const mouse = new THREE.Vector2();
@@ -142,12 +137,10 @@ clipPointToModel() {
   mouse.y = -(Input.mousey / window.innerHeight) * 2 + 1;
 
   // Step 2
-  raycaster.setFromCamera(mouse, camera);
-  console.log('Raycaster set from camera and mouse position.');
+  this.raycaster.setFromCamera(mouse, this.camera);
 
   // Check for intersections
-  const intersects = raycaster.intersectObjects(mannequin, true);
-  console.log('Raycaster intersection results:', intersects);
+  const intersects = this.raycaster.intersectObjects(mannequin, true);
 
   // Step 4
   if (intersects.length > 0) {
