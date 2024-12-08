@@ -152,7 +152,6 @@ Ammo().then(function(Ammo) {
 		// Handle movement of the corner anchor
 		if (anchorMesh && physics) {
 		  raycaster.handleAnchorMovement(deltaTime, anchorMesh);
-		  raycaster.setupMouseHandlers(anchorMesh, cloth, physics.objects[0], physics);
 		}
 		physics.simulate(deltaTime, anchorMesh);
 		renderer.render(scene, camera);
