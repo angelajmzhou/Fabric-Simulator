@@ -111,7 +111,7 @@ handleClothDrag(event){
         console.log('Dragging deactivated!');
         let intersection = this.clipPointToModel(mannequin);
         if(intersection != -1){
-          this.physics.pinpoints[this.index].setPinLocation(this.index,intersection);
+          this.physics.setPinLocation(this.index,intersection);
         }
         else{
           if(this.physics.pinActive){
@@ -152,9 +152,10 @@ clipPointToModel(woman) {
     console.error("Mannequin is undefined or not yet loaded!");
     return;
   }
-  mannequin.computeBoundingBox();
+  //mannequin.computeBoundingBox();
   // Check for intersections
-  const intersects = this.raycaster.intersectObject(mannequin, true);
+  const intersects = this.raycaster.intersectObjects(this.scene.children, true);
+
 
   // Step 4
   if (intersects.length > 0) {
@@ -200,15 +201,11 @@ checkMouseClickOnAnchor(event, anchorMesh) {
     if (this.anchorDrag) {
       // If dragging is already active, stop it
       this.anchorDrag = false;
-      console.log('Dragging deactivated!');
     } else {
       // If dragging isn't active, start it
       this.anchorDrag = true;
-      console.log('Dragging activated!');
     }
-  } else {
-    console.log('No valid intersection');
-  }
+  } 
 }
 
 

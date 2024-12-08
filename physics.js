@@ -451,7 +451,7 @@ createCloth(
       clickCoord.y,
       clickCoord.z
     ));
-    const sphereMass = 1; // Small mass
+    const sphereMass = 0; // Small mass
     const sphereLocalInertia = new Ammo.btVector3(0, 0, 0);
     sphereShape.calculateLocalInertia(sphereMass, sphereLocalInertia);
     const sphereMotionState = new Ammo.btDefaultMotionState(sphereTransform);
@@ -481,7 +481,8 @@ createCloth(
   setPinLocation(index, location){
     this.pinActive = false;
     const pinpoint = this.pinpoints[index].userData.physicsBody;
-    const transform = pinpoint.getTransform();
+    console.log(pinpoint);
+    const transform = pinpoint.getWorldTransform();
     transform.setIdentity(); // Reset to identity matrix
     transform.setOrigin(new this.Ammo.btVector3(location.x, location.y, location.z)); // Set new origin
     pinpoint.setWorldTransform(transform); // Update the object's world transform
