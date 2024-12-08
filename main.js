@@ -34,10 +34,11 @@ Ammo().then(function(Ammo) {
 	const light = new THREE.DirectionalLight(0xffffff, 1);
 	light.position.set(5, 10, 7);
 	scene.add(light);
-	
+	let mannequin;
 	// Load Mannequin
 	const loader = new FBXLoader();
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
+	  mannequin = fbx;
 	  console.log("Mannequin scale:", fbx.scale);
 	  console.log("Mannequin position:", fbx.position);
 	  physics.addModel(fbx);
@@ -100,7 +101,7 @@ Ammo().then(function(Ammo) {
 	
 	// UI function
 	raycaster.setupUIHandlers();
-	raycaster.setupMouseHandlers(anchorMesh);
+	raycaster.setupMouseHandlers(anchorMesh, cloth, mannequin);
 
 	// Animation Loop
 	function animate() {

@@ -43,8 +43,12 @@ handleAnchorDrag(event, anchorMesh) {
   // Update raycaster
   this.raycaster.setFromCamera(mouse, this.camera);
 
-  // Define the movement plane (e.g., XY plane with Z fixed)
-  const movementPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -anchorMesh.position.z);
+  // Calculate the view vector (camera direction)
+  const viewVector = new THREE.Vector3();
+  this.camera.getWorldDirection(viewVector); // Get the normalized direction the camera is looking
+
+  // Define a plane perpendicular to the view vector, passing through the anchor's position
+  const movementPlane = new THREE.Plane(viewVector, -viewVector.dot(anchorMesh.position));
   const intersection = new THREE.Vector3();
 
   // Check for intersection with the plane
@@ -57,6 +61,68 @@ handleAnchorDrag(event, anchorMesh) {
   }
 }
 
+//check if a click is on the cloth, and if it is, drag it
+//upon unclick, check if the raycaster intersects the mannequin. if yes, pin it. if no, let go of the cloth and destroy the temporary physics
+handleClipDrag(event, tempClip){
+    // Convert mouse position to normalized device coordinates (NDC)
+    const mouse = new THREE.Vector2();
+    mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
+    mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1; 
+  
+    // Update raycaster
+    this.raycaster.setFromCamera(mouse, this.camera);
+  
+    // Calculate the view vector (camera direction)
+    const viewVector = new THREE.Vector3();
+    this.camera.getWorldDirection(viewVector); // Get the normalized direction the camera is looking
+  
+    // Define a plane perpendicular to the view vector, passing through the anchor's position
+    const movementPlane = new THREE.Plane(viewVector, -viewVector.dot(anchorMesh.position));
+    const intersection = new THREE.Vector3();
+  
+    // Check for intersection with the plane
+    if (this.raycaster.ray.intersectPlane(movementPlane, intersection)) {
+      // Directly set the position to the intersection point without lerping
+      tempClip.position.copy(intersection);
+      console.log('Anchor position updated to:', anchorMesh.position);
+    } else {
+      console.log('No intersection with movement plane.');
+    }
+  }
+
+  checkMouseClickOnCloth(event, cloth, mannequin) {
+    const mouse = new THREE.Vector2();
+    mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
+    mouse.y = -(event.clientY - canvas.offsetTop) / canvas.clientHeight * 2 + 1;  
+  
+    // Set up the raycaster using the mouse click location
+    this.raycaster.setFromCamera(mouse, this.camera);
+  
+    // Perform intersection test with the anchor
+    const intersects = this.raycaster.intersectObject(cloth, true);
+    let index;
+    if (intersects.length > 0) {
+      if (this.isDragging) {
+        // If dragging is already active, stop it
+        this.isDragging = false;
+        console.log('Dragging deactivated!');
+        let intersection;
+        if((intersection = this.clipPointToModel(mannequin))!= -1){
+          this.physics.pinpoints[index].setPinLocation(index,intersection);
+        }
+        else{
+          this.physics.destroyPin();//need to implement this
+        }
+      } else {
+        // If dragging isn't active, start it
+        this.isDragging = true;
+        index = this.physics.createPinPoint(intersects[0].point);
+        console.log('Dragging activated!');
+      }
+    } else {
+      console.log('No valid intersection');
+    }
+  }
 // Step 1: Get the current mouse position in normalized device coordinates (NDC)
 // Step 2: Update the raycaster to use the mouse position and camera
 // Step 3: Check for intersections with objects in the scene
@@ -68,25 +134,19 @@ clipPointToModel() {
     return;
   }
 
-  console.log('Clipping point to the model...');
-
   // Step 1
   const mouse = new THREE.Vector2();
   // Convert X position to NDC (-1 to +1)
   mouse.x = (Input.mousex / window.innerWidth) * 2 - 1;
   // Convert Y position to NDC (-1 to +1)
   mouse.y = -(Input.mousey / window.innerHeight) * 2 + 1;
-  console.log('Mouse position in NDC:', mouse);
 
   // Step 2
   raycaster.setFromCamera(mouse, camera);
   console.log('Raycaster set from camera and mouse position.');
 
-  // Step 3
-  // All objects in the scene
-  const objectsToCheck = scene.children;
   // Check for intersections
-  const intersects = raycaster.intersectObjects(objectsToCheck, true);
+  const intersects = raycaster.intersectObjects(mannequin, true);
   console.log('Raycaster intersection results:', intersects);
 
   // Step 4
@@ -101,6 +161,7 @@ clipPointToModel() {
   } else {
     console.log('No objects intersected.');
   }
+  return intersects.length>0?intersects[0].point:-1;
 }
 
 showClippedPoints() {
@@ -187,7 +248,7 @@ setupUIHandlers() {
     }
   });
 }
-  setupMouseHandlers(anchorMesh) {
+  setupMouseHandlers(anchorMesh, cloth, mannequin) {
     if (!this.raycaster || !this.camera || !this.scene) {
       console.log('Raycaster, camera, or scene not initialized!');
       return;
@@ -199,11 +260,13 @@ setupUIHandlers() {
     // Add event listeners
     window.addEventListener('mousedown', (event) => {
       this.checkMouseClickOnAnchor(event, anchorMesh);
-    });
+      this.checkMouseClickOnCloth(event, cloth, mannequin)
+      });
   
     window.addEventListener('mousemove', (event) => {
       if (this.isDragging) {
         this.handleAnchorDrag(event, anchorMesh);
+        this.checkMouseClickOnCloth(event, cloth, mannequin)
       }
     });
   }

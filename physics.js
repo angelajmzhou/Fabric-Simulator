@@ -11,11 +11,11 @@ class Physics {
         this.scene = scene;
         this.objects = []; // Track objects added to the physics world
         this.softbodies = []; // Track objects added to the physics world
-
+        this.pinpoints = [];
 		    this.margin = 0.05;
         this.time = performance.now();
-
-
+        this.activePin = null;
+        this.pinActive = false;
         this.collisionConfiguration = new this.Ammo.btSoftBodyRigidBodyCollisionConfiguration(); 
         // Manage collisions between objects with configuration
         this.dispatcher = new this.Ammo.btCollisionDispatcher(this.collisionConfiguration);
@@ -64,7 +64,8 @@ addModel(fbx_model) {
     const transform = this.getTransform(fbx_model);
 
     const rotation = new Ammo.btQuaternion();
-    rotation.setEulerZYX(0, 0, -Math.PI/2); // Roll: 90 degrees
+    //rotate to compensate for blender coordinates
+    rotation.setEulerZYX(0, 0, -Math.PI/2); 
     transform.setRotation(rotation); // Adjust rotation in Ammo.js
     const motionState = new this.Ammo.btDefaultMotionState(transform);
     const rbInfo = new this.Ammo.btRigidBodyConstructionInfo(
@@ -165,46 +166,11 @@ getTransform(fbx_model){
 
     return transform;
 }
-/**
- * Loads a collision shape for a static mannequin
- * @param {THREE.Mesh} mesh Instance of a loaded FBX model
- */
 
 /**
  * Loads a collision shape for a static mannequin
  * @param {THREE.Mesh} mesh Instance of a loaded FBX model
  */
-createTriangleMeshCollisionShape(mesh, fbx_model) {
-  //geometry.computeBoundingBox();
-  fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
-  fbx_model.updateMatrixWorld(true); // Update world matrix
-  mesh.geometry.applyMatrix4(fbx_model.matrixWorld); // Apply the transformation
-  mesh.geometry.scale(0.01, 0.01, 0.01); // Reapply the intended scale directly to geometry
-  const geometry = mesh.geometry;
-  const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
-   this.scene.add(boxHelper);
-
-   const axesHelper = new THREE.AxesHelper(1);
-   fbx_model.add(axesHelper);
-
-
-  const scale = 1;
-  const meshShape = new Ammo.btTriangleMesh(true, true);
-  const vertices = geometry.attributes.position.array;
-  for (let i = 0; i < vertices.length; i += 9) {
-    meshShape.addTriangle(
-      new Ammo.btVector3(vertices[i] * scale, vertices[i + 1] * scale, vertices[i + 2] * scale),
-      new Ammo.btVector3(vertices[i + 3] * scale, vertices[i + 4] * scale, vertices[i + 5] * scale),
-      new Ammo.btVector3(vertices[i + 6] * scale, vertices[i + 7] * scale, vertices[i + 8] * scale),
-      true
-    );
-  }  
-  
-    const shape = new Ammo.btBvhTriangleMeshShape(meshShape, false, true);
-    console.log("Collision shape created:", meshShape.constructor.name);
-    return shape;
-    }
-
   createWireframeAndMesh(mesh, fbx_model) {
     fbx_model.scale.set(1, 1, 1); // Temporarily reset scale
     fbx_model.updateMatrixWorld(true); // Ensure the world matrix is up to date
@@ -279,22 +245,16 @@ createTriangleMeshCollisionShape(mesh, fbx_model) {
     return shape;
   }
 
-    /**
-     * @param {number} clothWidth Width of the cloth
-     * @param {number} clothHeight Height of the cloth
-     * @param {THREE.Vector3} clothPos Position of the cloth in world space
-     * @param {number} margin Collision margin for the soft body
-     */
-    /**
+/** 
  * @param {number} clothWidth Width of the cloth
  * @param {number} clothHeight Height of the cloth
  * @param {THREE.Vector3} clothPos Position of the cloth in world space
  * @param {number} margin Collision margin for the soft body
- */
+ **/
 createCloth(
   clothWidth = 20,
   clothHeight = 20,
-  clothPos = new THREE.Vector3(0, 50, 0),
+  clothPos = new THREE.Vector3(20, 20, 0),
   margin = 0.5
 ) {
   const clothNumSegmentsZ = clothWidth;
@@ -445,7 +405,8 @@ createCloth(
       }
       
       // Find the closest vertex index on the cloth
-    findClosestVertex(geometry, targetPosition) {
+    findClosestVertex(targetPosition) {
+      const geometry = softbodies[0].geometry;
       const vertices = geometry.attributes.position.array;
       let closestIndex = -1;
       let closestDistance = Infinity;
@@ -465,7 +426,87 @@ createCloth(
       }
 
       return closestIndex;
-}
+  }
+  createPinPoint(clickCoord){
+    this.pinActive = true;
+    const softBodyNodes = softBody.get_m_nodes();
+    const clothVertexIndex = this.findClosestVertex(); // Vertex to drag
+    const clothNode = softBodyNodes.at(clothVertexIndex);
+    const clothNodePosition = clothNode.get_m_x(); // Initial position of the vertex
+
+    // 1. Create a small draggable sphere
+    const sphereSize = 0.1; // Small sphere
+    const sphereGeometry = new THREE.SphereGeometry(sphereSize);
+    const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    this.scene.add(sphereMesh);
+
+    // Create Ammo.js rigid body for the sphere
+    const sphereShape = new Ammo.btSphereShape(sphereSize);
+    const sphereTransform = new Ammo.btTransform();
+    sphereTransform.setIdentity();
+    sphereTransform.setOrigin(new Ammo.btVector3(
+      clothNodePosition.x(),
+      clothNodePosition.y(),
+      clothNodePosition.z()
+    ));
+    const sphereMass = 1; // Small mass
+    const sphereLocalInertia = new Ammo.btVector3(0, 0, 0);
+    sphereShape.calculateLocalInertia(sphereMass, sphereLocalInertia);
+    const sphereMotionState = new Ammo.btDefaultMotionState(sphereTransform);
+
+    const sphereBody = new Ammo.btRigidBody(
+      new Ammo.btRigidBodyConstructionInfo(sphereMass, sphereMotionState, sphereShape, sphereLocalInertia)
+    );
+    physicsWorld.addRigidBody(sphereBody);
+
+    // Sync Three.js sphere with Ammo.js rigid body
+    sphereMesh.position.set(
+      clothNodePosition.x(),
+      clothNodePosition.y(),
+      clothNodePosition.z()
+    );
+    sphereMesh.userData.physicsBody = sphereBody;
+    // 2. Anchor the cloth vertex to the sphere
+    softBody.appendAnchor(clothVertexIndex, sphereBody, true, 1.0);
+    
+    const index = this.pinpoints.size;
+    this.pinpoints.push(sphereMesh);
+
+    return index;
+  }
+  setPinLocation(index, location){
+    this.pinActive = false;
+    const pinpoint = this.pinpoints[index].userData.physicsBody;
+    const transform = pinpoint.getTransform();
+    transform.setIdentity(); // Reset to identity matrix
+    transform.setOrigin(new this.Ammo.btVector3(location.x, location.y, location.z)); // Set new origin
+    pinpoint.setWorldTransform(transform); // Update the object's world transform
+  }
+
+  destroyPin(index){
+    this.pinActive = false;
+    const mesh = this.pinpoints[index];
+    const body = mesh.userData.physicsBody;
+    scene.remove(mesh); // Remove the mesh from the scene
+    if (mesh.geometry) {
+        mesh.geometry.dispose();
+    }
+    if (mesh.material) {
+        if (Array.isArray(mesh.material)) {
+            mesh.material.forEach((material) => material.dispose());
+        } else {
+            mesh.material.dispose();
+        }
+    }
+
+    // Set the mesh reference to null (optional, for garbage collection)
+    mesh = null;
+    physicsWorld.removeRigidBody(body);
+    this.Ammo.destroy(body.getMotionState());
+    this.Ammo.destroy(body);
+    this.pinpoints.splice(index, 1);
+  }
 
     simulate(deltaTime, anchorMesh) {
         // Step the physics simulation forward
@@ -481,11 +522,19 @@ createCloth(
         const anchorPhysicsBody = anchorMesh.userData.physicsBody;
 
         if (anchorPhysicsBody) {
+          //update the location of the mesh anchor in the physics world
           this.transformAux1.setIdentity();
           this.transformAux1.setOrigin(new this.Ammo.btVector3(anchorMesh.position.x, anchorMesh.position.y, anchorMesh.position.z));
           anchorPhysicsBody.setWorldTransform(this.transformAux1);
 
         }
+        if (this.pinActive){
+          this.transformAux1.setIdentity();
+          //eerrr how handle dis
+          this.transformAux1.setOrigin(new this.Ammo.btVector3(anchorMesh.position.x, anchorMesh.position.y, anchorMesh.position.z));
+          anchorPhysicsBody.setWorldTransform(this.transformAux1);
+        }
+        
     }    
 }
 export default Physics
