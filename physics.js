@@ -471,8 +471,9 @@ createCloth(
     // 2. Anchor the cloth vertex to the sphere
     this.cloth.userData.physicsBody.appendAnchor(clothVertexIndex, sphereBody, true, 1.0);
     
-    const index = this.pinpoints.size;
-    this.pinpoints.push(sphereMesh);
+     this.pinpoints.push(sphereMesh);
+    const index = this.pinpoints.length-1;
+
 
     return index;
   }
@@ -487,10 +488,14 @@ createCloth(
 
   destroyPin(index){
     if(this.pinpoints.length==0) {return;}
+    if(index>=this.pinpoints.length){
+      console.log("length exceeded for pinpoints");
+      return;
+    }
     this.pinActive = false;
     const mesh = this.pinpoints[index];
     const body = mesh.userData.physicsBody;
-    scene.remove(mesh); // Remove the mesh from the scene
+    this.scene.remove(mesh); // Remove the mesh from the scene
     if (mesh.geometry) {
         mesh.geometry.dispose();
     }
@@ -502,9 +507,7 @@ createCloth(
         }
     }
 
-    // Set the mesh reference to null (optional, for garbage collection)
-    mesh = null;
-    physicsWorld.removeRigidBody(body);
+    this.physicsWorld.removeRigidBody(body);
     this.Ammo.destroy(body.getMotionState());
     this.Ammo.destroy(body);
     this.pinpoints.splice(index, 1);

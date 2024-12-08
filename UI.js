@@ -64,7 +64,7 @@ handleAnchorDrag(event, anchorMesh) {
 
 //check if a click is on the cloth, and if it is, drag it
 //upon unclick, check if the raycaster intersects the mannequin. if yes, pin it. if no, let go of the cloth and destroy the temporary physics
-handleClipDrag(event, tempClip){
+handleClothDrag(event, tempClip){
     // Convert mouse position to normalized device coordinates (NDC)
     const mouse = new THREE.Vector2();
     mouse.x = (event.clientX - canvas.offsetLeft) / canvas.clientWidth * 2 - 1;
@@ -78,14 +78,13 @@ handleClipDrag(event, tempClip){
     this.camera.getWorldDirection(viewVector); // Get the normalized direction the camera is looking
   
     // Define a plane perpendicular to the view vector, passing through the anchor's position
-    const movementPlane = new THREE.Plane(viewVector, -viewVector.dot(anchorMesh.position));
+    const movementPlane = new THREE.Plane(viewVector, -viewVector.dot(tempClip.position));
     const intersection = new THREE.Vector3();
   
     // Check for intersection with the plane
     if (this.raycaster.ray.intersectPlane(movementPlane, intersection)) {
       // Directly set the position to the intersection point without lerping
       tempClip.position.copy(intersection);
-      console.log('Anchor position updated to:', anchorMesh.position);
     } else {
       console.log('No intersection with movement plane.');
     }
@@ -106,14 +105,14 @@ handleClipDrag(event, tempClip){
 
     // Perform intersection test with the anchor
     const intersects = this.raycaster.intersectObject(cloth, true);
-    let index;
+    let index = 0;
     if (intersects.length > 0) {
       if (this.clothDrag) {
         // If dragging is already active, stop it
         this.clothDrag = false;
         console.log('Dragging deactivated!');
-        let intersection;
-        if((intersection = this.clipPointToModel(mannequin))!= -1){
+        let intersection =this.clipPointToModel(mannequin);
+        if(intersection != -1){
           this.physics.pinpoints[index].setPinLocation(index,intersection);
         }
         else{
@@ -166,7 +165,7 @@ clipPointToModel(woman) {
     // The exact 3D point of intersection
     const intersectedPoint = closestIntersection.point;
     // Save this point
-    clippedPoints.push(intersectedPoint);
+    this.clippedPoints.push(intersectedPoint);
     console.log('Clipped point in world space:', intersectedPoint);
   } else {
     console.log('No objects intersected.');
@@ -276,7 +275,7 @@ setupUIHandlers() {
     window.addEventListener('mousemove', (event) => {
       if (this.anchorDrag) {
         this.handleAnchorDrag(event, anchorMesh);
-        this.checkMouseClickOnCloth(event, cloth, mannequin)
+        this.handleClothDrag(event, cloth, mannequin);
       }
     });
   }
