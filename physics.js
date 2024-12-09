@@ -166,9 +166,7 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
   }
     console.log(typeof mesh)
     mesh.geometry.scale(factor, factor, factor);
-    const boxHelper = new THREE.BoxHelper(mesh, 0xffff00);
 
-     this.scene.add(boxHelper);     
     const geometry = mesh.geometry;
     let scale = factor;
     if(frame){
@@ -194,6 +192,7 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
       meshShape.addTriangle(v0, v1, v2, true);
 
       // For visualization: Push edges for Three.js line segments
+      /*
       linePositions.push(
         v0.x(), v0.y(), v0.z(),
         v1.x(), v1.y(), v1.z(),
@@ -202,7 +201,7 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
         v2.x(), v2.y(), v2.z(),
         v0.x(), v0.y(), v0.z()
       );
-
+      */
       // Free memory in Ammo.js
       Ammo.destroy(v0);
       Ammo.destroy(v1);
@@ -214,19 +213,19 @@ addCornerAnchor(threeObj, shape, origin, mesh) {
     shape.setMargin(0.01); // Reduce the collision margin
 
     // Visualization: Create a Three.js wireframe
+    /*
     const lineGeometry = new THREE.BufferGeometry();
     lineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
     const collisionWireframe = new THREE.LineSegments(lineGeometry, lineMaterial);
-
+    */
     // Position and scale the wireframe to match the mesh
-    //collisionWireframe.scale.set(1 / scale, 1 / scale, 1 / scale); // Undo scale factor
-    collisionWireframe.position.copy(mesh.position); // Match position
-    collisionWireframe.quaternion.copy(mesh.quaternion); // Match rotation
+    //collisionWireframe.position.copy(mesh.position); // Match position
+    //collisionWireframe.quaternion.copy(mesh.quaternion); // Match rotation
 
     // Add the wireframe to the scene
-    this.scene.add(collisionWireframe);
-    this.wireframe = collisionWireframe;
+    //this.scene.add(collisionWireframe);
+    //this.wireframe = collisionWireframe;
     console.log("Collision shape and wireframe created:", meshShape.constructor.name);
     return shape;
   }
@@ -260,12 +259,43 @@ createCloth(
       clothPos.z
   );
 
+  // Create material without a texture initially
   const clothMaterial = new THREE.MeshLambertMaterial({
       color: 0xffffff,
-      side: THREE.DoubleSide,
-      // wireframe: true
+      side: THREE.DoubleSide
+      // no map here yet
   });
+
+  // Create the cloth mesh
   const cloth = new THREE.Mesh(clothGeometry, clothMaterial);
+
+  // Load the texture asynchronously
+  const textureLoader = new THREE.TextureLoader();
+  console.log("Loading texture...");
+  textureLoader.load(
+      'Kwan-Liu-Ma.jpg',
+      (texture) => {
+          console.log("Texture loaded:", texture);
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+
+          console.log("Repeating texture with:", clothNumSegmentsZ, clothNumSegmentsY);
+          texture.repeat.set(clothNumSegmentsZ/10, clothNumSegmentsY/10);
+
+          // Apply the texture to the already defined cloth material
+          if (cloth.material) {
+              console.log("Applying texture to cloth material.");
+              clothMaterial.map = texture;
+              clothMaterial.needsUpdate = true;
+          } else {
+              console.error("Cloth material is not defined.");
+          }
+      },
+      undefined,
+      (error) => {
+          console.error("Error loading texture:", error);
+      }
+  );
 
   // Define Ammo.js cloth corners
   const clothCorner00 = new this.Ammo.btVector3(
@@ -314,7 +344,6 @@ createCloth(
   clothSoftBody.get_m_materials().at(0).set_m_kLST(0.3);
   clothSoftBody.get_m_materials().at(0).set_m_kAST(0.3);
 
-
   clothSoftBody.setTotalMass(3.0, false);
 
   Ammo.castObject(clothSoftBody, Ammo.btCollisionObject)
@@ -341,17 +370,6 @@ createCloth(
 }
 
 
-
-    changeClothTexture(cloth){
-        const textureLoader = new THREE.TextureLoader();
-        textureLoader.load("../textures/grid.png", (texture) => {
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(this.clothNumSegmentsZ, this.clothNumSegmentsY);
-            cloth.material.map = texture;
-            cloth.material.needsUpdate = true;
-        });
-    }
 
     clothUpdate(cloth) {
         var clothSoftBody = cloth.userData.physicsBody;
@@ -478,6 +496,12 @@ createCloth(
     if(index>=this.pinpoints.length){
       console.log("length exceeded for pinpoints");
       return;
+    }
+    var anchors = softBody.m_anchors;
+
+    // Check and remove an anchor (if you have its index)
+    if (anchors.size() > anchorIndex) {
+        anchors.at(anchorIndex).m_body = null; // This might require experimenting with your Ammo.js version
     }
     console.log("pin destroyed")
     this.pinActive = false;

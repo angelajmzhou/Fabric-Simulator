@@ -9,6 +9,7 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.raycaster = new THREE.Raycaster();
   this.raycaster.near = 0.1;
   this.raycaster.far = 1000; // Adjust to your scene size
+  this.raycaster.layers.enableAll();
   this.raycaster.params.Line.threshold = 5
   this.raycaster.params.Points.threshold = 5
   this.pinIndex = 0;
@@ -204,7 +205,7 @@ clipPointToModel(woman) {
   }
   //mannequin.computeBoundingBox();
   // Check for intersections
-  const intersects = this.raycaster.intersectObjects([mannequin]);
+  const intersects = this.raycaster.intersectObject(mannequin);
 
 
   // Step 4

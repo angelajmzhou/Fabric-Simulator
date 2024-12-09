@@ -100,7 +100,6 @@ Ammo().then(function(Ammo) {
 	scene.add(floorMesh);
 	
 	let cloth = physics.createCloth();
-	physics.changeClothTexture(cloth);
 	cloth.frustumCulled = false;
 	cloth.castShadow = true;
 	cloth.receiveShadow = true;
