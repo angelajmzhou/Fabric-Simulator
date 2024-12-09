@@ -41,7 +41,7 @@ Ammo().then(function(Ammo) {
 	scene.add(light);
 	let mannequin;
 	// Load Mannequin
-	
+	/*
 	const loader = new FBXLoader();
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 	  mannequin = fbx;
@@ -62,7 +62,8 @@ Ammo().then(function(Ammo) {
         }
 	});
 	});
-	/*
+	*/
+	
 	const mtlLoader = new MTLLoader();
 	mtlLoader.load('birdman.mtl', (materials) => {
 		materials.preload(); 
@@ -85,7 +86,7 @@ Ammo().then(function(Ammo) {
 			});
 		});
 	});
-	*/
+	
 	
 
 
