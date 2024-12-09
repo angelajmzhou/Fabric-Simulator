@@ -440,7 +440,7 @@ createCloth(
     const clothNodePosition = clothNode.get_m_x(); // Initial position of the vertex
 
     // 1. Create a small draggable sphere
-    const sphereSize = 0.1; // Small sphere
+    const sphereSize = 0.25; // Small sphere
     const sphereGeometry = new THREE.SphereGeometry(sphereSize);
     const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);

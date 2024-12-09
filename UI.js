@@ -10,8 +10,8 @@ constructor(sceneInstance, cameraInstance, physicsInstance) {
   this.raycaster.near = 0.1;
   this.raycaster.far = 1000; // Adjust to your scene size
   this.raycaster.layers.enableAll();
-  this.raycaster.params.Line.threshold = 5
-  this.raycaster.params.Points.threshold = 5
+  this.raycaster.params.Line.threshold = 10;
+  this.raycaster.params.Points.threshold = 10;
   this.pinIndex = 0;
   // objects be in this scene
   this.scene = sceneInstance;
@@ -261,55 +261,55 @@ checkMouseClickOnAnchor(event, anchorMesh) {
 
 
 
-// Setup event handlers for UI interactions
-setupUIHandlers() {
-  const SButton = document.getElementById("clipToModel");
-  const AButton = document.getElementById("drawmodePoints");
-  const LButton = document.getElementById("RemovePoints");
+// // Setup event handlers for UI interactions
+// setupUIHandlers() {
+//   const SButton = document.getElementById("clipToModel");
+//   const AButton = document.getElementById("drawmodePoints");
+//   const LButton = document.getElementById("RemovePoints");
 
-  // Button event listeners
-  document.getElementById('drawmodePoints').addEventListener('click', this.showClippedPoints);
-  document.getElementById('clipToModel').addEventListener('click', this.clipPointToModel);
-  document.getElementById('RemovePoints').addEventListener('click', this.clearClippedPoints);
+//   // Button event listeners
+//   document.getElementById('drawmodePoints').addEventListener('click', this.showClippedPoints);
+//   document.getElementById('clipToModel').addEventListener('click', this.clipPointToModel);
+//   document.getElementById('RemovePoints').addEventListener('click', this.clearClippedPoints);
 
-  // Keyboard event listeners
-  window.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() === 'j') {
-      console.log('[S] Key pressed');
-      //clipPointToModel();
-      SButton.classList.add('active-button');
-    }
-    if (event.key.toLowerCase() === 'k') {
-      AButton.classList.add('active-button');
-    }
-    if (event.key.toLowerCase() === 'l') {
-      LButton.classList.add('active-button');
-    }
-  });
+//   // Keyboard event listeners
+//   // window.addEventListener('keydown', (event) => {
+//   //   if (event.key.toLowerCase() === 'j') {
+//   //     console.log('[S] Key pressed');
+//   //     //clipPointToModel();
+//   //     SButton.classList.add('active-button');
+//   //   }
+//   //   if (event.key.toLowerCase() === 'k') {
+//   //     AButton.classList.add('active-button');
+//   //   }
+//   //   if (event.key.toLowerCase() === 'l') {
+//   //     LButton.classList.add('active-button');
+//   //   }
+//   // });
 
-  window.addEventListener('keyup', (event) => {
-    if (event.key.toLowerCase() === 'j') {
-      SButton.classList.remove('active-button');
-    }
-    if (event.key.toLowerCase() === 'k') {
-      console.log('[A] Key released');
-      showClippedPoints();
-      AButton.classList.remove('active-button');
-    }
-    if (event.key.toLowerCase() === 'l') {
-      console.log('[L] Key released');
-      clearClippedPoints();
-      LButton.classList.remove('active-button');
-    }
-    // if (event.key.toLowerCase() === 'w') {
-    //   console.log('[W] Key released');
-    //   if (this.physics.pinActive){
-    //     this.physics.destroyPin(this.physics.activePin);
+//   // window.addEventListener('keyup', (event) => {
+//   //   if (event.key.toLowerCase() === 'j') {
+//   //     SButton.classList.remove('active-button');
+//   //   }
+//   //   if (event.key.toLowerCase() === 'k') {
+//   //     console.log('[A] Key released');
+//   //     showClippedPoints();
+//   //     AButton.classList.remove('active-button');
+//   //   }
+//   //   if (event.key.toLowerCase() === 'l') {
+//   //     console.log('[L] Key released');
+//   //     clearClippedPoints();
+//   //     LButton.classList.remove('active-button');
+//   //   }
+//   //   // if (event.key.toLowerCase() === 'w') {
+//   //   //   console.log('[W] Key released');
+//   //   //   if (this.physics.pinActive){
+//   //   //     this.physics.destroyPin(this.physics.activePin);
 
-    //   }
-    // }
-  });
-}
+//   //   //   }
+//   //   // }
+//   // });
+// }
   setupMouseHandlers(anchorMesh, cloth, mannequin, physics) {
     if (!this.raycaster || !this.camera || !this.scene) {
       console.log('Raycaster, camera, or scene not initialized!');

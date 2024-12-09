@@ -41,7 +41,7 @@ Ammo().then(function(Ammo) {
 	scene.add(light);
 	let mannequin;
 	// Load Mannequin
-	/*
+	
 	const loader = new FBXLoader();
 	loader.load('Female_Body_Base_Model.fbx', (fbx) => {
 	  mannequin = fbx;
@@ -62,7 +62,7 @@ Ammo().then(function(Ammo) {
         }
 	});
 	});
-	*/
+	/*
 	const mtlLoader = new MTLLoader();
 	mtlLoader.load('birdman.mtl', (materials) => {
 		materials.preload(); 
@@ -85,6 +85,8 @@ Ammo().then(function(Ammo) {
 			});
 		});
 	});
+	*/
+	
 
 
 	const floorShape = new Ammo.btBoxShape(new Ammo.btVector3(10, 0.5, 10));
@@ -140,7 +142,7 @@ Ammo().then(function(Ammo) {
 	const controls = new OrbitControls(camera, renderer.domElement);
 	
 	// UI function
-	raycaster.setupUIHandlers();
+	// raycaster.setupUIHandlers();
 	console.log(physics.objects)
 	raycaster.setupMouseHandlers(anchorMesh, cloth, mannequin, physics);
 
